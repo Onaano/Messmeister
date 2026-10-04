@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Messmeister — Längen, Gewichte &amp; Fassungsvermögen | Förderfreude Games</title>
+<style>
+  :root{
+    --cream:#faf3e7; --cream-dark:#eeddc2; --ink:#3a3226; --muted:#665c50;
+    --panel:#fffcf5; --panel-edge:rgba(58,50,38,.16);
+    --altrosa:#d98a92; --altrosa-dark:#b06670; --salbei:#8fa888; --salbei-dark:#6d8768;
+    --gelb:#eec14a; --gelb-dark:#c99a1f; --terrakotta:#d97e55; --terrakotta-dark:#9a4a28;
+    --hellblau:#8fb9c9; --hellblau-dark:#5f93a6; --wood:#c99a6c; --wood-dark:#a97a4d;
+    --font-display: ui-rounded, 'Segoe UI Rounded', 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; height:100%; overscroll-behavior:none; }
+  body{
+    font-family:var(--font-body); color:var(--ink);
+    background:linear-gradient(180deg, #dfe8d6 0%, #eef0e0 45%, var(--cream) 100%);
+    height:100vh; height:100dvh; display:flex; flex-direction:column; overflow:hidden;
+    user-select:none; -webkit-user-select:none;
+  }
+  button{ font-family:inherit; cursor:pointer; border:none; background:none; padding:0; color:inherit; }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; } }
+
+  .bg-peg{ position:fixed; inset:0; z-index:0; pointer-events:none; background-image:radial-gradient(rgba(58,50,38,.10) 2px, transparent 2.6px); background-size:30px 30px; }
+  .bench{ position:fixed; left:0; right:0; bottom:0; width:100%; height:min(16vh,140px); z-index:0; pointer-events:none; overflow:hidden; }
+  .bench svg{ width:100%; height:100%; display:block; }
+
+  header{ flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:1.2vh 3vw .4vh; gap:2vw; z-index:5; position:relative; }
+  .brand{ font-family:var(--font-display); font-weight:800; font-size:clamp(13px,2vw,18px); display:flex; align-items:center; gap:1.2vw; }
+  .icon-btn{ width:clamp(36px,4.4vw,44px); height:clamp(36px,4.4vw,44px); border-radius:50%; background:var(--panel); border:1.6px solid var(--panel-edge); display:flex; align-items:center; justify-content:center; font-size:clamp(15px,1.9vw,19px); transition:transform .1s ease; }
+  .icon-btn:active{ transform:scale(.9); } .icon-btn[aria-pressed="false"]{ opacity:.5; }
+  .icon-btn:focus-visible, button:focus-visible{ outline:3px solid var(--hellblau-dark); outline-offset:2px; }
+  .pill-btn{ display:flex; align-items:center; gap:1vw; font-family:var(--font-display); font-weight:700; font-size:clamp(12px,1.6vw,14px); color:var(--ink); background:var(--panel); border:1.6px solid var(--panel-edge); border-radius:999px; padding:.9vh 3vw; min-height:34px; }
+  .pill-btn:active{ transform:scale(.95); }
+
+  .screen{ flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; position:relative; z-index:1; }
+  .screen[hidden]{ display:none; } .screen-center{ justify-content:center; }
+
+  #screen-start{ width:100%; overflow-y:auto; padding:1vh 4vw 18vh; }
+  .title-big{ font-family:var(--font-display); font-weight:800; font-size:clamp(23px,4.2vw,38px); color:var(--terrakotta-dark); margin:1vh 0 0; text-align:center; }
+  .subtitle-big{ font-family:var(--font-display); font-weight:700; font-size:clamp(12px,1.8vw,16px); margin:.3vh 0; text-align:center; }
+  .intro-line{ font-size:clamp(11px,1.6vw,14px); color:var(--muted); font-weight:600; margin:0 0 1.6vh; text-align:center; }
+  .mode-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:1.8vw; width:100%; max-width:1000px; margin:0 auto; }
+  .mode-card{ background:var(--panel); border:2.2px solid var(--panel-edge); border-radius:16px; padding:1.6vh 1.6vw; display:flex; flex-direction:column; align-items:center; gap:.8vh; box-shadow:0 5px 0 rgba(58,50,38,.12); transition:transform .1s ease; min-height:132px; justify-content:center; }
+  .mode-card:active{ transform:translateY(3px); box-shadow:0 2px 0 rgba(58,50,38,.12); }
+  .mode-icon{ width:46px; height:46px; } .mode-icon svg{ width:100%; height:100%; display:block; }
+  .mode-title{ font-family:var(--font-display); font-weight:800; font-size:clamp(12px,1.6vw,14.5px); text-align:center; }
+  .mode-sub{ font-size:clamp(9.5px,1.2vw,11px); color:var(--muted); font-weight:600; text-align:center; }
+  .c1{border-color:var(--terrakotta-dark)} .c2{border-color:var(--salbei-dark)} .c3{border-color:var(--hellblau-dark)} .c4{border-color:var(--gelb-dark)} .c5{border-color:var(--altrosa-dark)}
+  .c6{border-color:var(--hellblau-dark)} .c7{border-color:var(--terrakotta-dark)} .c8{border-color:var(--salbei-dark)} .c9{border-color:var(--gelb-dark)}
+  .brand-footer{ font-size:clamp(10px,1.3vw,12px); color:var(--muted); font-weight:700; text-align:center; margin-top:2vh; }
+
+  #screen-sub{ gap:2vh; padding:2vh 4vw 14vh; }
+  .sub-title{ font-family:var(--font-display); font-weight:800; font-size:clamp(18px,2.8vw,25px); color:var(--terrakotta-dark); text-align:center; margin:0; }
+  .sub-step{ font-family:var(--font-display); font-weight:700; font-size:clamp(12px,1.8vw,15px); color:var(--muted); text-align:center; }
+  .sub-choices{ display:flex; gap:2.2vw; flex-wrap:wrap; justify-content:center; max-width:780px; }
+  .sub-card{ background:var(--panel); border:2.4px solid var(--panel-edge); border-radius:14px; padding:2vh 3.2vw; min-width:140px; min-height:64px; box-shadow:0 5px 0 rgba(58,50,38,.14); font-family:var(--font-display); font-weight:800; font-size:clamp(13px,1.9vw,16px); display:flex; flex-direction:column; align-items:center; gap:.6vh; transition:transform .1s ease; }
+  .sub-card:active{ transform:translateY(3px); box-shadow:0 2px 0 rgba(58,50,38,.14); }
+  .sub-emoji{ font-size:1.5em; }
+
+  #screen-game{ width:100%; gap:.5vh; padding:0 3vw 1.2vh; }
+  .progress-row{ flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:1.4vw; padding-top:.3vh; flex-wrap:wrap; }
+  .progress-badges{ display:flex; gap:.8vw; }
+  .badge{ width:clamp(18px,2.8vw,26px); height:clamp(10px,1.5vw,14px); border-radius:2px; border:2px solid var(--panel-edge); opacity:.4; transition:opacity .3s, transform .3s, background .3s; background:repeating-linear-gradient(90deg, transparent 0 18%, rgba(58,50,38,.35) 18% 22%, transparent 22% 40%); }
+  .badge.lit{ opacity:1; border-color:var(--gelb-dark); background-color:#f6dc8a; transform:scale(1.15); }
+  .progress-num{ font-family:var(--font-display); font-weight:800; font-size:clamp(11px,1.6vw,15px); background:var(--panel); border:1.6px solid var(--panel-edge); border-radius:999px; padding:.4vh 3vw; }
+  .task-wrap{ flex:1; min-height:0; width:100%; display:flex; align-items:stretch; justify-content:center; padding:.2vh 0; }
+  .task-stage{ position:relative; border-radius:24px; width:100%; background:var(--panel); box-shadow:0 10px 26px -14px rgba(58,50,38,.35); display:flex; flex-direction:column; align-items:center; padding:1.2vh 3vw 1.4vh; gap:.8vh; overflow-y:auto; overflow-x:hidden; }
+  .prompt-row{ flex-shrink:0; display:flex; align-items:center; gap:2vw; }
+  .prompt-text{ font-family:var(--font-display); font-weight:800; font-size:clamp(15px,2.4vw,22px); text-align:center; }
+  .speak-btn{ flex-shrink:0; width:clamp(36px,4.2vw,42px); height:clamp(36px,4.2vw,42px); border-radius:50%; background:#fdf3d6; border:2px solid #8f6c0c; color:#8f6c0c; display:flex; align-items:center; justify-content:center; font-size:clamp(14px,1.9vw,17px); }
+  .speak-btn:active{ transform:scale(.9); }
+  .task-body{ flex:1 0 auto; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.2vh; }
+  .feedback-msg{ flex-shrink:0; font-family:var(--font-display); font-weight:700; font-size:clamp(12.5px,1.8vw,15px); color:#8c4852; text-align:center; min-height:1.8em; opacity:0; transition:opacity .2s; }
+  .feedback-msg.show{ opacity:1; } .feedback-msg.good{ color:#4d6649; }
+
+  .fig{ width:100%; display:flex; justify-content:center; }
+  .fig-svg{ width:min(100%, 880px); } .mm-svg{ width:100%; height:auto; display:block; max-height:38vh; }
+  .fig-icon{ width:clamp(96px,20vh,170px); height:clamp(96px,20vh,170px); } .fig-icon svg{ width:100%; height:100%; display:block; }
+  .fig.col{ flex-direction:column; align-items:center; gap:1vh; }
+  .statement{ font-family:var(--font-display); font-weight:800; font-size:clamp(17px,3vw,28px); text-align:center; background:var(--cream); border-radius:16px; padding:1.2vh 3vw; max-width:900px; }
+  .choice-row.two{ grid-template-columns:repeat(2,minmax(0,1fr)); width:min(100%,680px); }
+  .choice-card.unit{ white-space:nowrap; }
+  .choice-row.sent{ grid-template-columns:repeat(2,minmax(0,1fr)); width:min(100%,960px); }
+  @media (max-width:640px){ .choice-row.sent{ grid-template-columns:1fr; } }
+  .choice-card.sent{ font-size:clamp(13px,1.8vw,17px); line-height:1.3; padding:1.4vh 1.6vw; }
+  .vessel-wrap svg{ height:min(38vh,320px); width:auto; max-width:100%; display:block; }
+  .equation{ font-family:var(--font-display); font-weight:800; font-size:clamp(24px,5vw,46px); color:var(--terrakotta-dark); text-align:center; padding:.6vh 3vw; background:var(--cream); border-radius:16px; }
+
+  .choice-row{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.6vh 2vw; width:min(100%,640px); }
+  @media (min-width:900px){ .choice-row{ grid-template-columns:repeat(4,minmax(0,1fr)); width:min(100%,900px); } }
+  .choice-card{ background:var(--panel); border:3px solid var(--panel-edge); border-radius:14px; padding:1.4vh 1vw; min-height:58px; display:flex; align-items:center; justify-content:center; text-align:center; box-shadow:0 4px 0 rgba(58,50,38,.12); transition:transform .1s ease; font-family:var(--font-display); font-weight:800; font-size:clamp(16px,2.4vw,22px); }
+  .choice-card:active{ transform:translateY(3px); }
+  .choice-card.unit{ font-size:clamp(20px,3.2vw,30px); }
+  .choice-card.wrong-shake, .tap-card.wrong-shake, .sign-btn.wrong-shake{ animation:shake .4s ease; border-color:var(--altrosa-dark); }
+  .choice-card.correct-pulse, .tap-card.correct-pulse, .sign-btn.correct-pulse{ animation:pulse .5s ease; border-color:var(--salbei-dark); background:#e3efdd; }
+  @keyframes shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  @keyframes pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+
+  .cards-row{ display:grid; gap:1.6vh 2.4vw; width:min(100%,900px); grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .cards-row.how{ grid-template-columns:repeat(3,minmax(0,1fr)); width:min(100%,1100px); }
+  @media (max-width:760px){ .cards-row.how{ grid-template-columns:1fr; } }
+  .tap-card{ background:var(--panel); border:3px solid var(--panel-edge); border-radius:16px; padding:1.4vh 1.2vw; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.6vh; box-shadow:0 4px 0 rgba(58,50,38,.12); transition:transform .1s ease; min-height:70px; }
+  .tap-card:active{ transform:translateY(3px); }
+  .tc-icon{ width:clamp(64px,13vh,110px); height:clamp(64px,13vh,110px); } .tc-icon svg{ width:100%; height:100%; display:block; }
+  .tc-title{ font-family:var(--font-display); font-weight:700; font-size:clamp(12px,1.7vw,15px); color:var(--muted); }
+  .tc-text{ font-family:var(--font-display); font-weight:800; font-size:clamp(16px,2.6vw,24px); }
+  .cards-row.txt .tc-text{ font-size:clamp(20px,3.6vw,34px); padding:1.4vh 0; }
+  .tc-cap{ font-family:var(--font-display); font-weight:800; font-size:clamp(13px,1.8vw,16px); color:var(--terrakotta-dark); }
+  .cards-row.vessels .vessel-wrap svg{ height:min(30vh,250px); }
+  .cards-row.how .mm-svg{ max-height:none; }
+  .sign-row{ display:flex; align-items:center; justify-content:center; gap:2.4vw; flex-wrap:wrap; }
+  .sign-side{ font-family:var(--font-display); font-weight:800; font-size:clamp(22px,4.2vw,40px); background:var(--cream); border-radius:14px; padding:1vh 2.6vw; }
+  .sign-q{ font-family:var(--font-display); font-weight:800; font-size:clamp(24px,4.4vw,42px); color:var(--terrakotta-dark); }
+  .sign-btns{ display:flex; gap:3vw; }
+  .sign-btn{ width:clamp(64px,12vw,96px); height:clamp(64px,12vw,96px); border-radius:18px; background:var(--panel); border:3px solid var(--panel-edge); box-shadow:0 4px 0 rgba(58,50,38,.12); font-family:var(--font-display); font-weight:800; font-size:clamp(30px,6vw,48px); }
+  .sign-btn:active{ transform:translateY(3px); }
+
+  #screen-end{ gap:1.4vh; text-align:center; padding:2vh 4vw 16vh; overflow-y:auto; width:100%; }
+  .end-art{ display:flex; gap:2vw; justify-content:center; margin:1vh 0; } .end-art .ea{ width:clamp(48px,9vw,76px); height:clamp(48px,9vw,76px); } .end-art svg{ width:100%; height:100%; }
+  .end-title{ font-family:var(--font-display); font-weight:800; font-size:clamp(19px,3.4vw,30px); margin:0; }
+  .end-sub{ font-family:var(--font-display); font-weight:700; font-size:clamp(13px,1.9vw,17px); color:var(--terrakotta-dark); margin:0; }
+  .end-actions{ display:flex; gap:3vw; margin-top:.5vh; flex-wrap:wrap; justify-content:center; }
+  .btn-primary{ font-family:var(--font-display); font-weight:800; font-size:clamp(13px,1.9vw,16px); color:#fff; background:var(--terrakotta-dark); border-radius:999px; padding:1.7vh 5.2vw; box-shadow:0 8px 18px -8px rgba(180,94,57,.5); min-height:48px; }
+  .btn-secondary{ font-family:var(--font-display); font-weight:800; font-size:clamp(13px,1.9vw,16px); background:var(--panel); border:2px solid var(--panel-edge); border-radius:999px; padding:1.7vh 5.2vw; min-height:48px; }
+  .btn-primary:active, .btn-secondary:active{ transform:scale(.96); }
+  @media (max-width:560px){ .end-actions{ flex-direction:column; width:100%; } }
+  @media (max-height:600px){ .mode-card{ min-height:96px; padding:1vh 1.4vw; } .mode-icon{ width:34px; height:34px; } }
+</style>
+</head>
+<body>
+<div class="bg-peg" aria-hidden="true"></div>
+<div class="bench" aria-hidden="true">
+  <svg viewBox="0 0 1600 140" preserveAspectRatio="xMidYMax slice">
+    <rect x="0" y="112" width="1600" height="28" fill="#c99a6c"/><rect x="0" y="112" width="1600" height="6" fill="#a97a4d"/>
+    <g transform="translate(90,84)"><rect width="300" height="28" rx="3" fill="#f3d9a6" stroke="#b8975a" stroke-width="3"/><g stroke="#3a3226" stroke-width="2.4"><line x1="20" y1="0" x2="20" y2="14"/><line x1="50" y1="0" x2="50" y2="10"/><line x1="80" y1="0" x2="80" y2="14"/><line x1="110" y1="0" x2="110" y2="10"/><line x1="140" y1="0" x2="140" y2="14"/><line x1="170" y1="0" x2="170" y2="10"/><line x1="200" y1="0" x2="200" y2="14"/><line x1="230" y1="0" x2="230" y2="10"/><line x1="260" y1="0" x2="260" y2="14"/></g></g>
+    <g transform="translate(520,26)"><path d="M10,0 H70 L64,86 H16 Z" fill="#cfe6ee" stroke="#7a7062" stroke-width="4"/><path d="M13,36 H67 L64,86 H16 Z" fill="#8fb9c9"/><g stroke="#3a3226" stroke-width="3"><line x1="10" y1="20" x2="24" y2="20"/><line x1="12" y1="40" x2="26" y2="40"/><line x1="14" y1="60" x2="28" y2="60"/></g></g>
+    <g transform="translate(760,18)"><rect x="52" y="12" width="8" height="82" fill="#7a7062"/><rect x="14" y="4" width="84" height="8" rx="4" fill="#7a7062"/><path d="M20,12 L8,52 H44 Z" fill="none" stroke="#7a7062" stroke-width="3"/><path d="M92,12 L80,52 H116 Z" fill="none" stroke="#7a7062" stroke-width="3"/><rect x="2" y="52" width="48" height="8" rx="3" fill="#d97e55"/><rect x="74" y="52" width="48" height="8" rx="3" fill="#8fa888"/><rect x="36" y="90" width="40" height="6" rx="3" fill="#7a7062"/></g>
+    <g transform="translate(1030,32)"><path d="M0,0 H76 L66,80 H10 Z" fill="#8fb9c9" stroke="#5f93a6" stroke-width="4"/><rect x="-5" y="-4" width="86" height="9" rx="3" fill="#5f93a6"/><path d="M8,-2 C8,-34 68,-34 68,-2" fill="none" stroke="#7a7062" stroke-width="4"/></g>
+    <g transform="translate(1300,40)"><rect width="64" height="72" rx="6" fill="#fffdf8" stroke="#7a7062" stroke-width="4"/><g transform="rotate(-8 20 0)"><rect x="12" y="-30" width="9" height="46" fill="#eec14a"/><polygon points="12,-30 21,-30 16.5,-40" fill="#3a3226"/></g><g transform="rotate(10 40 0)"><rect x="36" y="-26" width="9" height="42" fill="#d97e55"/><polygon points="36,-26 45,-26 40.5,-36" fill="#3a3226"/></g></g>
+  </svg>
+</div>
+
+<header>
+  <div class="brand">📏 Messmeister</div>
+  <button class="icon-btn" id="btn-sound" aria-label="Ton an/aus" aria-pressed="true">🔊</button>
+</header>
+
+<div class="screen" id="screen-start">
+  <h1 class="title-big">📏 Messmeister</h1>
+  <p class="subtitle-big">Längen, Gewichte &amp; Fassungsvermögen</p>
+  <p class="intro-line">Was möchtest du üben?</p>
+  <div class="mode-grid" id="mode-grid"></div>
+  <p class="brand-footer">Förderfreude Games</p>
+</div>
+
+<div class="screen screen-center" id="screen-sub" hidden>
+  <button class="pill-btn" id="btn-sub-back" style="position:absolute; left:3vw; top:1vh;">← Zurück</button>
+  <h2 class="sub-title" id="sub-title"></h2>
+  <div class="sub-step" id="sub-step"></div>
+  <div class="sub-choices" id="sub-choices"></div>
+</div>
+
+<div class="screen" id="screen-game" hidden>
+  <div class="progress-row">
+    <button class="pill-btn" id="btn-game-back">← Zurück</button>
+    <div class="progress-badges" id="progress-badges" aria-label="Fortschritt"></div>
+    <div class="progress-num"><span id="progress-count">0</span> von 8</div>
+    <button class="pill-btn" id="btn-game-level" hidden>Stufe ändern</button>
+    <button class="pill-btn" id="btn-game-restart">Neue Runde</button>
+  </div>
+  <div class="task-wrap">
+    <div class="task-stage" id="task-stage">
+      <div class="prompt-row">
+        <button class="speak-btn" id="btn-speak-task" aria-label="Vorlesen">🔊</button>
+        <div class="prompt-text" id="prompt-text"></div>
+      </div>
+      <div class="task-body" id="task-body"></div>
+      <div class="feedback-msg" id="feedback-msg" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-end" hidden>
+  <div class="end-art" id="end-art"></div>
+  <h2 class="end-title">Geschafft! 🎉</h2>
+  <p class="end-sub">Du bist ein echter Messmeister!</p>
+  <div class="end-actions">
+    <button class="btn-primary" id="btn-again">Noch eine Runde</button>
+    <button class="btn-secondary" id="btn-other-mode">Anderen Modus wählen</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+"use strict";
+/* ===== MESSMEISTER: Kern (Einheiten, Umrechnung, Formatierung, Vergleich) ===== */
+function clean(x){ return Math.round(x*1e6)/1e6; }
+function DE(n){ return String(clean(n)).replace('.', ','); }
+const UNITS = {
+  mm:{kind:'len',f:1}, cm:{kind:'len',f:10}, m:{kind:'len',f:1000}, km:{kind:'len',f:1000000},
+  g:{kind:'wei',f:1}, kg:{kind:'wei',f:1000},
+  ml:{kind:'vol',f:1}, l:{kind:'vol',f:1000}
+};
+const BASE = {len:'mm', wei:'g', vol:'ml'};
+const KIND_UNIT_ORDER = {len:['km','m','cm','mm'], wei:['kg','g'], vol:['l','ml']};
+function convert(v, from, to){
+  if(UNITS[from].kind !== UNITS[to].kind) throw new Error('Einheitenart passt nicht: '+from+' -> '+to);
+  return clean(v*UNITS[from].f/UNITS[to].f);
+}
+function convertLength(v, from, to){ if(UNITS[from].kind!=='len'||UNITS[to].kind!=='len') throw new Error('keine Laenge'); return convert(v,from,to); }
+function convertWeight(v, from, to){ if(UNITS[from].kind!=='wei'||UNITS[to].kind!=='wei') throw new Error('kein Gewicht'); return convert(v,from,to); }
+function convertVolume(v, from, to){ if(UNITS[from].kind!=='vol'||UNITS[to].kind!=='vol') throw new Error('kein Volumen'); return convert(v,from,to); }
+function toBase(m){ return convert(m.v, m.u, BASE[UNITS[m.u].kind]); }
+function formatMeasure(v, u){ return DE(v)+' '+u; }
+function formatBase(base, kind, unit){
+  if(unit) return formatMeasure(convert(base, BASE[kind], unit), unit);
+  for(const u of KIND_UNIT_ORDER[kind]){
+    const v = convert(base, BASE[kind], u);
+    if(Number.isInteger(v) && v >= 1) return formatMeasure(v, u);
+  }
+  return formatMeasure(base, BASE[kind]);
+}
+function formatLength(mm, unit){ return formatBase(mm, 'len', unit); }
+function formatWeight(g, unit){ return formatBase(g, 'wei', unit); }
+function formatVolume(ml, unit){ return formatBase(ml, 'vol', unit); }
+// zusammengesetzt, z. B. 1500 g -> "1 kg 500 g" (base = Basiseinheit mm/g/ml)
+function formatCompound(base, big, small){
+  const bf = UNITS[big].f, sf = UNITS[small].f;
+  const bigVal = Math.floor(base/bf);
+  const rem = base - bigVal*bf;
+  const smallVal = rem/sf;
+  if(!Number.isInteger(smallVal)) throw new Error('nicht glatt teilbar');
+  if(bigVal === 0) return smallVal+' '+small;
+  if(smallVal === 0) return bigVal+' '+big;
+  return bigVal+' '+big+' '+smallVal+' '+small;
+}
+function compareMeasurements(a, b){
+  const x = typeof a === 'number' ? a : toBase(a);
+  const y = typeof b === 'number' ? b : toBase(b);
+  return x < y ? -1 : (x > y ? 1 : 0);
+}
+
+// Anzeige: Zahl und Einheit nie durch einen Zeilenumbruch trennen (geschuetztes Leerzeichen). Intern bleiben Texte unveraendert.
+function nb(s){ return String(s).replace(/(\d) (km|kg|mm|cm|ml|m|g|l)\b/g, '$1\u00A0$2'); }
+/* ===== MESSMEISTER: Grafiken (SVG) ===== */
+const ICONS = {
+  bleistift:`<g transform="rotate(-32 50 50)"><rect x="24" y="42" width="48" height="16" fill="#eec14a" stroke="#c99a1f" stroke-width="2"/><polygon points="24,42 24,58 6,50" fill="#e6c79a"/><polygon points="6,50 13,46.5 13,53.5" fill="#3a3226"/><rect x="72" y="42" width="5" height="16" fill="#9a9a9a"/><rect x="77" y="42" width="11" height="16" rx="3" fill="#d98a92"/></g>`,
+  radiergummi:`<rect x="14" y="34" width="72" height="32" rx="9" fill="#d98a92"/><path d="M48,34 H77 a9,9 0 0 1 9,9 V57 a9,9 0 0 1 -9,9 H48 Z" fill="#8fb9c9"/>`,
+  schere:`<ellipse cx="25" cy="30" rx="11" ry="9" fill="none" stroke="#b45e39" stroke-width="5"/><ellipse cx="25" cy="70" rx="11" ry="9" fill="none" stroke="#b45e39" stroke-width="5"/><path d="M33,64 L90,36 M33,36 L90,64" stroke="#8a8a8a" stroke-width="7"/><circle cx="60" cy="50" r="3.5" fill="#3a3226"/>`,
+  lineal:`<rect x="4" y="36" width="92" height="28" rx="3" fill="#f3d9a6" stroke="#b8975a" stroke-width="2"/>`+Array.from({length:11},(_,i)=>`<line x1="${10+i*8}" y1="36" x2="${10+i*8}" y2="${36+(i%5===0?15:9)}" stroke="#3a3226" stroke-width="1.6"/>`).join(''),
+  tuer:`<rect x="26" y="8" width="48" height="86" rx="3" fill="#c99a6c" stroke="#a97a4d" stroke-width="3"/><rect x="33" y="16" width="34" height="30" fill="none" stroke="#a97a4d" stroke-width="2.5"/><rect x="33" y="54" width="34" height="32" fill="none" stroke="#a97a4d" stroke-width="2.5"/><circle cx="66" cy="52" r="3.4" fill="#3a3226"/>`,
+  schreibtisch:`<rect x="8" y="38" width="84" height="9" rx="2" fill="#c99a6c" stroke="#a97a4d" stroke-width="2"/><rect x="14" y="47" width="8" height="42" fill="#a97a4d"/><rect x="78" y="47" width="8" height="42" fill="#a97a4d"/><rect x="56" y="47" width="20" height="20" fill="#d9b48a" stroke="#a97a4d" stroke-width="2"/><circle cx="66" cy="57" r="2.4" fill="#3a3226"/>`,
+  fahrrad:`<circle cx="24" cy="66" r="17" fill="none" stroke="#3a3226" stroke-width="4"/><circle cx="76" cy="66" r="17" fill="none" stroke="#3a3226" stroke-width="4"/><path d="M24,66 L44,40 L68,40 L76,66 M44,40 L50,66 L24,66 M50,66 L68,40" fill="none" stroke="#d97e55" stroke-width="4" stroke-linejoin="round"/><path d="M68,40 L72,28 L82,28 M38,34 L52,34" fill="none" stroke="#3a3226" stroke-width="4" stroke-linecap="round"/>`,
+  schulranzen:`<rect x="22" y="20" width="56" height="68" rx="11" fill="#d97e55" stroke="#b45e39" stroke-width="3"/><path d="M22,40 Q50,58 78,40 V31 a11,11 0 0 0 -11,-11 H33 a11,11 0 0 0 -11,11 Z" fill="#b45e39"/><rect x="32" y="60" width="36" height="22" rx="5" fill="#d98a92" stroke="#b06670" stroke-width="2"/><rect x="46" y="44" width="8" height="9" rx="2" fill="#eec14a"/>`,
+  apfel:`<path d="M50,30 C28,20 12,38 18,60 C24,82 40,90 50,84 C60,90 76,82 82,60 C88,38 72,20 50,30 Z" fill="#c9533d" stroke="#9c3d2c" stroke-width="3"/><path d="M50,30 C50,20 54,14 60,10" fill="none" stroke="#6b4a33" stroke-width="4" stroke-linecap="round"/><path d="M56,22 C66,12 78,16 76,24 C68,28 60,26 56,22 Z" fill="#6d8768"/>`,
+  mehl:`<path d="M26,22 H74 V86 a4,4 0 0 1 -4,4 H30 a4,4 0 0 1 -4,-4 Z" fill="#fff8ea" stroke="#7a7062" stroke-width="3"/><path d="M26,22 L32,12 H68 L74,22 Z" fill="#ecdcc0" stroke="#7a7062" stroke-width="3"/><rect x="33" y="42" width="34" height="26" rx="4" fill="#eec14a"/><text x="50" y="60" font-size="13" font-weight="800" text-anchor="middle" fill="#3a3226" font-family="system-ui,sans-serif">Mehl</text>`,
+  buch:`<rect x="20" y="16" width="60" height="68" rx="4" fill="#6d8768"/><rect x="20" y="16" width="9" height="68" fill="#4f6a4b"/><rect x="36" y="30" width="36" height="16" rx="3" fill="#eec14a"/><rect x="36" y="54" width="24" height="5" rx="2.5" fill="#fffdf8"/>`,
+  schokolade:`<rect x="20" y="22" width="60" height="56" rx="4" fill="#6b4a33" stroke="#4a3322" stroke-width="2"/><path d="M20,50 H80 M40,22 V78 M60,22 V78" stroke="#8a634a" stroke-width="2.5"/><rect x="20" y="22" width="60" height="12" fill="#c9c9c9"/>`,
+  trinkflasche:`<rect x="40" y="10" width="20" height="10" rx="3" fill="#d97e55"/><rect x="43" y="20" width="14" height="14" fill="#8fb9c9"/><path d="M43,34 C28,38 32,46 32,52 V86 a6,6 0 0 0 6,6 H62 a6,6 0 0 0 6,-6 V52 C68,46 72,38 57,34 Z" fill="#8fb9c9" stroke="#5f93a6" stroke-width="3"/><rect x="34" y="58" width="32" height="14" fill="#fffdf8" opacity=".75"/>`,
+  wasserflasche:`<rect x="42" y="4" width="16" height="9" rx="3" fill="#5f93a6"/><rect x="44" y="13" width="12" height="16" fill="#cfe6ee" stroke="#5f93a6" stroke-width="2"/><path d="M44,29 C28,34 32,42 32,50 V90 a5,5 0 0 0 5,5 H63 a5,5 0 0 0 5,-5 V50 C68,42 72,34 56,29 Z" fill="#cfe6ee" stroke="#5f93a6" stroke-width="3"/><path d="M33,60 H67 V90 a5,5 0 0 1 -5,5 H38 a5,5 0 0 1 -5,-5 Z" fill="#8fb9c9"/>`,
+  eimer:`<path d="M22,34 H78 L70,88 a4,4 0 0 1 -4,4 H34 a4,4 0 0 1 -4,-4 Z" fill="#8fb9c9" stroke="#5f93a6" stroke-width="3"/><rect x="18" y="30" width="64" height="8" rx="3" fill="#5f93a6"/><path d="M26,32 C26,6 74,6 74,32" fill="none" stroke="#7a7062" stroke-width="3.5"/>`,
+  badewanne:`<path d="M8,48 H92 V60 Q92,80 72,80 H28 Q8,80 8,60 Z" fill="#fffdf8" stroke="#7a7062" stroke-width="3"/><path d="M14,58 Q26,52 38,58 T62,58 T86,58" fill="none" stroke="#8fb9c9" stroke-width="4"/><rect x="20" y="80" width="8" height="8" fill="#7a7062"/><rect x="72" y="80" width="8" height="8" fill="#7a7062"/><path d="M80,48 V28 H70" fill="none" stroke="#7a7062" stroke-width="4" stroke-linecap="round"/>`,
+  milchkarton:`<path d="M28,34 L50,16 L72,34 Z" fill="#e8eef0" stroke="#7a7062" stroke-width="2.5"/><rect x="28" y="34" width="44" height="56" fill="#fffdf8" stroke="#7a7062" stroke-width="3"/><rect x="28" y="52" width="44" height="22" fill="#8fb9c9"/><text x="50" y="68" font-size="12" font-weight="800" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif">Milch</text>`,
+  teeloeffel:`<ellipse cx="28" cy="38" rx="17" ry="12" fill="#c9c9c9" stroke="#8a8a8a" stroke-width="3"/><path d="M42,44 L86,74" stroke="#8a8a8a" stroke-width="7" stroke-linecap="round"/>`,
+  glas:`<path d="M30,18 H70 L64,88 a4,4 0 0 1 -4,4 H40 a4,4 0 0 1 -4,-4 Z" fill="#eef6f9" stroke="#5f93a6" stroke-width="3"/><path d="M33,46 H67 L64,88 a4,4 0 0 1 -4,4 H40 a4,4 0 0 1 -4,-4 Z" fill="#8fb9c9"/>`,
+  wegweiser:`<rect x="46" y="10" width="8" height="84" fill="#a97a4d"/><path d="M18,20 H70 L84,30 L70,40 H18 Z" fill="#eec14a" stroke="#c99a1f" stroke-width="2.5"/><path d="M82,50 H30 L16,60 L30,70 H82 Z" fill="#d98a92" stroke="#b06670" stroke-width="2.5"/><text x="42" y="35" font-size="13" font-weight="800" text-anchor="middle" fill="#3a3226" font-family="system-ui,sans-serif">km</text>`,
+  papier:`<rect x="26" y="34" width="52" height="44" fill="#e9e3d3"/><rect x="22" y="30" width="52" height="44" fill="#fffdf8" stroke="#7a7062" stroke-width="2.5"/><path d="M30,42 H66 M30,50 H66 M30,58 H54" stroke="#8fb9c9" stroke-width="3"/>`,
+  banane:`<path d="M14,62 C20,30 56,14 88,30 C90,34 86,38 82,37 C56,35 40,46 36,74 C30,80 16,76 14,62 Z" fill="#eec14a" stroke="#c99a1f" stroke-width="3" stroke-linejoin="round"/><path d="M86,28 l7,-8" stroke="#6b4a33" stroke-width="5" stroke-linecap="round"/>`,
+  ei:`<ellipse cx="50" cy="55" rx="25" ry="33" fill="#fff8ea" stroke="#c9b48a" stroke-width="3"/><ellipse cx="42" cy="42" rx="6" ry="9" fill="#ffffff" opacity=".8"/>`,
+  brot:`<path d="M12,62 C12,34 32,22 50,22 C68,22 88,34 88,62 V72 a7,7 0 0 1 -7,7 H19 a7,7 0 0 1 -7,-7 Z" fill="#d9a05b" stroke="#a97a4d" stroke-width="3"/><path d="M30,38 L38,54 M48,32 L56,50 M66,38 L72,54" stroke="#a97a4d" stroke-width="3.5" stroke-linecap="round"/>`,
+  wassermelone:`<circle cx="50" cy="54" r="35" fill="#6d8768" stroke="#4f6a4b" stroke-width="3"/><path d="M30,28 C40,50 40,64 36,82 M50,20 C55,48 55,66 50,90 M70,28 C62,50 62,64 66,82" stroke="#4f6a4b" stroke-width="4" fill="none"/>`,
+  schluessel:`<circle cx="28" cy="50" r="18" fill="none" stroke="#c99a1f" stroke-width="9"/><rect x="44" y="45" width="46" height="10" fill="#c99a1f"/><rect x="72" y="55" width="7" height="12" fill="#c99a1f"/><rect x="84" y="55" width="7" height="9" fill="#c99a1f"/>`,
+  zahnbuerste:`<rect x="6" y="52" width="62" height="14" rx="7" fill="#8fb9c9"/><rect x="60" y="48" width="32" height="22" rx="6" fill="#5f93a6"/><g fill="#d98a92"><rect x="64" y="34" width="4" height="15"/><rect x="71" y="34" width="4" height="15"/><rect x="78" y="34" width="4" height="15"/><rect x="85" y="34" width="4" height="15"/></g>`,
+  loeffel:`<ellipse cx="28" cy="50" rx="22" ry="16" fill="#c9c9c9" stroke="#8a8a8a" stroke-width="3"/><ellipse cx="28" cy="50" rx="14" ry="9" fill="#e2e2e2"/><rect x="46" y="46" width="48" height="9" rx="4" fill="#b9b9b9" stroke="#8a8a8a" stroke-width="2"/>`,
+  moehre:`<path d="M10,50 L72,36 Q82,50 72,64 Z" fill="#e8873a" stroke="#c46a22" stroke-width="3" stroke-linejoin="round"/><path d="M72,40 L90,28 M76,50 L96,50 M72,60 L90,72" stroke="#6d8768" stroke-width="6" stroke-linecap="round"/>`,
+  handy:`<rect x="30" y="8" width="40" height="84" rx="8" fill="#3a3226"/><rect x="34" y="18" width="32" height="62" rx="2" fill="#8fb9c9"/><circle cx="50" cy="87" r="3" fill="#fff"/>`,
+  bus:`<rect x="6" y="28" width="88" height="46" rx="8" fill="#eec14a" stroke="#c99a1f" stroke-width="3"/><rect x="12" y="36" width="14" height="16" fill="#eaf6fa"/><rect x="30" y="36" width="14" height="16" fill="#eaf6fa"/><rect x="48" y="36" width="14" height="16" fill="#eaf6fa"/><rect x="70" y="36" width="18" height="30" fill="#eaf6fa"/><circle cx="26" cy="76" r="8" fill="#3a3226"/><circle cx="74" cy="76" r="8" fill="#3a3226"/>`,
+  kartoffel:`<path d="M14,52 C12,30 42,20 64,26 C88,32 92,54 78,68 C66,82 26,82 14,52 Z" fill="#c9a06a" stroke="#a97a4d" stroke-width="3"/><circle cx="36" cy="46" r="2.6" fill="#a97a4d"/><circle cx="58" cy="58" r="2.6" fill="#a97a4d"/><circle cx="66" cy="42" r="2.6" fill="#a97a4d"/>`,
+  tasse:`<path d="M16,32 H66 V66 a16,16 0 0 1 -16,16 H32 a16,16 0 0 1 -16,-16 Z" fill="#fffdf8" stroke="#7a7062" stroke-width="3.5"/><path d="M66,40 H76 a10,10 0 0 1 0,22 H66" fill="none" stroke="#7a7062" stroke-width="4"/><path d="M18,44 H64" stroke="#8fb9c9" stroke-width="3"/>`,
+  giesskanne:`<path d="M18,40 H60 L56,82 a4,4 0 0 1 -4,4 H26 a4,4 0 0 1 -4,-4 Z" fill="#8fa888" stroke="#6d8768" stroke-width="3"/><path d="M60,52 L92,32 L95,39 L60,62" fill="#8fa888" stroke="#6d8768" stroke-width="3"/><path d="M24,40 C24,16 54,16 54,40" fill="none" stroke="#6d8768" stroke-width="4"/>`,
+  kochtopf:`<path d="M16,38 H76 V74 a10,10 0 0 1 -10,10 H26 a10,10 0 0 1 -10,-10 Z" fill="#b9b9b9" stroke="#7a7a7a" stroke-width="3.5"/><rect x="12" y="32" width="68" height="8" rx="3" fill="#8a8a8a"/><rect x="2" y="46" width="14" height="7" rx="3" fill="#3a3226"/><rect x="76" y="46" width="14" height="7" rx="3" fill="#3a3226"/>`,
+  regentonne:`<path d="M24,18 H76 V84 a4,4 0 0 1 -4,4 H28 a4,4 0 0 1 -4,-4 Z" fill="#5f93a6" stroke="#3f6f80" stroke-width="3"/><path d="M24,38 H76 M24,62 H76" stroke="#3f6f80" stroke-width="4"/><rect x="40" y="70" width="20" height="9" rx="2" fill="#3a3226"/>`,
+  aquarium:`<rect x="10" y="26" width="80" height="56" rx="4" fill="#cfe6ee" stroke="#5f93a6" stroke-width="3.5"/><rect x="12" y="40" width="76" height="40" fill="#8fb9c9"/><ellipse cx="40" cy="58" rx="10" ry="6" fill="#d97e55"/><polygon points="50,58 60,52 60,64" fill="#d97e55"/><path d="M76,80 q-2,-16 4,-22" stroke="#6d8768" stroke-width="3" fill="none"/>`,
+  auto:`<path d="M8,64 V52 L24,36 H64 L80,50 L94,56 V64 Z" fill="#d97e55" stroke="#b45e39" stroke-width="3" stroke-linejoin="round"/><path d="M28,42 H48 V50 H22 Z M52,42 H62 L72,50 H52 Z" fill="#eaf6fa"/><circle cx="28" cy="68" r="9" fill="#3a3226"/><circle cx="74" cy="68" r="9" fill="#3a3226"/>`,
+  ameise:`<ellipse cx="26" cy="58" rx="14" ry="10" fill="#3a3226"/><ellipse cx="50" cy="54" rx="9" ry="8" fill="#3a3226"/><ellipse cx="72" cy="50" rx="11" ry="9" fill="#3a3226"/><path d="M40,60 L30,78 M50,62 L50,82 M58,60 L68,78 M78,42 L88,30 M80,46 L94,40" stroke="#3a3226" stroke-width="3" stroke-linecap="round" fill="none"/>`,
+  fussballfeld:`<rect x="8" y="22" width="84" height="56" fill="#8fa888" stroke="#fff" stroke-width="3"/><path d="M50,22 V78" stroke="#fff" stroke-width="3"/><circle cx="50" cy="50" r="10" fill="none" stroke="#fff" stroke-width="3"/><rect x="8" y="38" width="12" height="24" fill="none" stroke="#fff" stroke-width="3"/><rect x="80" y="38" width="12" height="24" fill="none" stroke="#fff" stroke-width="3"/>`,
+  klassenzimmer:`<rect x="10" y="22" width="80" height="56" fill="#fffdf8" stroke="#7a7062" stroke-width="3"/><rect x="18" y="30" width="38" height="22" fill="#6d8768"/><rect x="62" y="30" width="20" height="30" rx="2" fill="#c99a6c"/><path d="M10,78 H90" stroke="#a97a4d" stroke-width="5"/><rect x="22" y="62" width="14" height="8" fill="#d97e55"/><rect x="42" y="62" width="14" height="8" fill="#d97e55"/>`
+};
+function iconSvg(key){ return `<svg viewBox="0 0 100 100" aria-hidden="true">${ICONS[key]||''}</svg>`; }
+
+/* Gegenstaende fuer die Linealaufgaben: werden auf die gewuenschte Laenge gestreckt (Enden exakt bei xs/xe) */
+const PAL = [['#eec14a','#c99a1f'],['#8fb9c9','#5f93a6'],['#d97e55','#b45e39'],['#8fa888','#6d8768']];
+const PAL_ER = [['#d98a92','#8fb9c9'],['#8fa888','#eec14a'],['#8fb9c9','#d97e55'],['#eec14a','#b06670']];
+const PAL_BK = [['#6d8768','#4f6a4b'],['#b45e39','#8a4726'],['#5f93a6','#3f6f80'],['#b06670','#8a4a53']];
+const OBJ_DRAW = {
+  pencil:(xs,xe,yb,v)=>{const c=PAL[(v||0)%4],h=46,y=yb-h,L=xe-xs,tip=Math.min(L*.16,70),er=Math.min(L*.09,36),band=8,bx0=xs+tip,bx1=xe-er-band;
+    return `<polygon points="${xs},${y+h/2} ${bx0},${y} ${bx0},${y+h}" fill="#e6c79a"/>`+
+      `<polygon points="${xs},${y+h/2} ${xs+tip*.34},${y+h/2-h/2*.34} ${xs+tip*.34},${y+h/2+h/2*.34}" fill="#3a3226"/>`+
+      `<rect x="${bx0}" y="${y}" width="${bx1-bx0}" height="${h}" fill="${c[0]}"/>`+
+      `<rect x="${bx0}" y="${y+h*.42}" width="${bx1-bx0}" height="${h*.16}" fill="${c[1]}"/>`+
+      `<rect x="${bx1}" y="${y}" width="${band}" height="${h}" fill="#a9a9a9"/>`+
+      `<rect x="${xe-er}" y="${y}" width="${er}" height="${h}" fill="#d98a92"/>`;},
+  eraser:(xs,xe,yb,v)=>{const c=PAL_ER[(v||0)%4],h=44,y=yb-h,L=xe-xs,r=10,sl=xs+L*.5;
+    return `<rect x="${xs}" y="${y}" width="${L}" height="${h}" rx="${r}" fill="${c[0]}"/>`+
+      `<path d="M${sl},${y} H${xe-r} a${r},${r} 0 0 1 ${r},${r} V${y+h-r} a${r},${r} 0 0 1 -${r},${r} H${sl} Z" fill="${c[1]}"/>`;},
+  brush:(xs,xe,yb)=>{const h=36,y=yb-h,m=y+h/2,L=xe-xs,bl=Math.min(L*.2,100),fe=Math.min(L*.14,56);
+    return `<path d="M${xs},${m} C${xs+bl*.35},${m-h*.52} ${xs+bl*.8},${m-h*.5} ${xs+bl},${m-h*.42} V${m+h*.42} C${xs+bl*.8},${m+h*.5} ${xs+bl*.35},${m+h*.52} ${xs},${m} Z" fill="#b45e39"/>`+
+      `<rect x="${xs+bl}" y="${m-h*.44}" width="${fe}" height="${h*.88}" fill="#b9b9b9"/>`+
+      `<rect x="${xs+bl+fe-6}" y="${m-h*.2}" width="${xe-(xs+bl+fe-6)}" height="${h*.4}" rx="6" fill="#8fa888"/>`;},
+  pen:(xs,xe,yb,v)=>{const c=PAL[((v||0)+1)%4],h=36,y=yb-h,L=xe-xs,tip=Math.min(L*.14,50),cap=L*.32;
+    return `<polygon points="${xs},${y+h/2} ${xs+tip},${y+h*.18} ${xs+tip},${y+h*.82}" fill="#3a3226"/>`+
+      `<rect x="${xs+tip}" y="${y}" width="${L-tip-cap}" height="${h}" fill="${c[0]}"/>`+
+      `<rect x="${xe-cap}" y="${y-3}" width="${cap}" height="${h+6}" rx="6" fill="${c[1]}"/>`;},
+  book:(xs,xe,yb,v)=>{const c=PAL_BK[(v||0)%4],L=xe-xs,h=Math.min(L*.72,100),y=yb-h;
+    return `<rect x="${xs}" y="${y}" width="${L}" height="${h}" rx="4" fill="${c[0]}"/>`+
+      `<rect x="${xs}" y="${y}" width="${Math.min(14,L*.08)}" height="${h}" fill="${c[1]}"/>`+
+      `<rect x="${xs+L*.2}" y="${y+h*.2}" width="${L*.6}" height="${h*.26}" rx="3" fill="#eec14a"/>`+
+      `<rect x="${xs+L*.2}" y="${y+h*.58}" width="${L*.4}" height="${h*.08}" rx="3" fill="#fffdf8" opacity=".85"/>`;},
+  spoon:(xs,xe,yb)=>{const h=40,y=yb-h,m=y+h/2,L=xe-xs,bw=Math.min(L*.3,110);
+    return `<rect x="${xs+bw*.7}" y="${m-h*.11}" width="${xe-(xs+bw*.7)}" height="${h*.22}" rx="${h*.11}" fill="#b9b9b9"/>`+
+      `<ellipse cx="${xs+bw/2}" cy="${m}" rx="${bw/2}" ry="${h*.46}" fill="#c9c9c9"/><ellipse cx="${xs+bw/2}" cy="${m}" rx="${bw*.36}" ry="${h*.32}" fill="#e2e2e2"/>`;},
+  key:(xs,xe,yb)=>{const h=48,y=yb-h,m=y+h/2,L=xe-xs,r=h/2,t1=Math.min(12,L*.04);
+    return `<circle cx="${xs+r}" cy="${m}" r="${r}" fill="#c99a1f"/><circle cx="${xs+r}" cy="${m}" r="${r*.5}" fill="#fffcf5"/>`+
+      `<rect x="${xs+r*1.5}" y="${m-h*.1}" width="${xe-(xs+r*1.5)}" height="${h*.2}" fill="#c99a1f"/>`+
+      `<rect x="${xe-Math.min(34,L*.1)}" y="${m+h*.08}" width="${t1}" height="${h*.32}" fill="#c99a1f"/><rect x="${xe-t1}" y="${m+h*.08}" width="${t1}" height="${h*.22}" fill="#c99a1f"/>`;},
+  toothbrush:(xs,xe,yb)=>{const h=40,y=yb-h,m=y+h/2,L=xe-xs,hd=Math.min(L*.26,90);let br='';
+    for(let i=0;i<5;i++){ br+=`<rect x="${xe-hd+6+i*(hd-17)/4}" y="${m-h*.5}" width="5" height="${h*.28}" fill="#d98a92"/>`; }
+    return `<rect x="${xs}" y="${m-h*.15}" width="${L-hd+10}" height="${h*.3}" rx="${h*.15}" fill="#8fb9c9"/><rect x="${xe-hd}" y="${m-h*.22}" width="${hd}" height="${h*.44}" rx="6" fill="#5f93a6"/>`+br;},
+  carrot:(xs,xe,yb)=>{const h=44,y=yb-h,m=y+h/2,L=xe-xs,lf=Math.min(L*.2,60);
+    return `<polygon points="${xs},${m} ${xe-lf},${m-h*.5} ${xe-lf},${m+h*.5}" fill="#e8873a"/>`+
+      `<rect x="${xe-lf}" y="${m-h*.36}" width="${lf}" height="${h*.16}" fill="#6d8768"/><rect x="${xe-lf}" y="${m-h*.08}" width="${lf}" height="${h*.16}" fill="#6d8768"/><rect x="${xe-lf}" y="${m+h*.2}" width="${lf}" height="${h*.16}" fill="#6d8768"/>`;},
+  scissors:(xs,xe,yb)=>{const h=62,y=yb-h,L=xe-xs,cy=y+h/2,rx=Math.min(L*.11,34),ry=h*.2,sw=7;
+    return `<ellipse cx="${xs+rx}" cy="${cy-h*.26}" rx="${rx-sw/2}" ry="${ry}" fill="none" stroke="#b45e39" stroke-width="${sw}"/>`+
+      `<ellipse cx="${xs+rx}" cy="${cy+h*.26}" rx="${rx-sw/2}" ry="${ry}" fill="none" stroke="#b45e39" stroke-width="${sw}"/>`+
+      `<line x1="${xs+rx*1.6}" y1="${cy-h*.2}" x2="${xe}" y2="${cy+h*.1}" stroke="#8a8a8a" stroke-width="8"/>`+
+      `<line x1="${xs+rx*1.6}" y1="${cy+h*.2}" x2="${xe}" y2="${cy-h*.1}" stroke="#a7a7a7" stroke-width="8"/>`+
+      `<circle cx="${xs+L*.5}" cy="${cy}" r="5" fill="#3a3226"/>`;}
+};
+const OBJ_META = { pencil:['der','Bleistift','lang'], eraser:['der','Radiergummi','lang'], brush:['der','Pinsel','lang'],
+  scissors:['die','Schere','lang'], pen:['der','Stift','lang'], book:['das','Buch','breit'],
+  spoon:['der','Löffel','lang'], key:['der','Schlüssel','lang'], toothbrush:['die','Zahnbürste','lang'], carrot:['die','Möhre','lang'] };
+const OBJ_ICON = {pencil:'bleistift', eraser:'radiergummi', scissors:'schere', book:'buch', brush:'pinsel', pen:'stift', spoon:'loeffel', key:'schluessel', toothbrush:'zahnbuerste', carrot:'moehre'};
+
+/* Lineal + Gegenstand in EINEM Koordinatensystem: x(mm) = X0 + mm * S/10, S = SVG-Einheiten pro virtuellem cm */
+function measureSvg(o){
+  const W=1000, H=(o.tilt?330:236), X0=100, S=800/o.maxCm, yR=140;
+  const xOf = mm => X0 + mm*S/10;
+  const xs = xOf(o.startMm), xe = xOf(o.endMm);
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="mm-svg" role="img" aria-label="Lineal mit Gegenstand" data-max-cm="${o.maxCm}" data-s="${S}" data-x0="${X0}">`;
+  s += `<g class="obj" data-start-mm="${o.startMm}" data-end-mm="${o.endMm}" data-xs="${xs}" data-xe="${xe}">${OBJ_DRAW[o.obj](xs, xe, yR-8, o.variant)}</g>`;
+  if(!o.noGuides) s += `<line class="guide" x1="${xs}" y1="22" x2="${xs}" y2="${yR}" stroke="#b45e39" stroke-width="2.5" stroke-dasharray="6 6" opacity=".6"/><line class="guide" x1="${xe}" y1="22" x2="${xe}" y2="${yR}" stroke="#b45e39" stroke-width="2.5" stroke-dasharray="6 6" opacity=".6"/>`;
+  s += o.tilt ? `<g transform="rotate(${o.tilt} ${X0-40} ${yR})">` : `<g>`;
+  s += `<rect x="${X0-40}" y="${yR}" width="${o.maxCm*S+80}" height="90" rx="7" fill="#f3d9a6" stroke="#b8975a" stroke-width="3"/>`;
+  const detail = o.detail || 'cm';
+  for(let i=0;i<=o.maxCm*10;i++){
+    const isCm = i%10===0, isHalf = i%5===0 && !isCm;
+    if(!isCm && !(isHalf && (detail==='half'||detail==='mm')) && !(detail==='mm')) continue;
+    const len = isCm ? 40 : (isHalf ? 28 : 17);
+    s += `<line class="tk" data-mm="${i}" x1="${xOf(i)}" y1="${yR}" x2="${xOf(i)}" y2="${yR+len}" stroke="#3a3226" stroke-width="${isCm?3.4:(isHalf?2.4:1.6)}"/>`;
+    if(isCm) s += `<text class="tl" data-cm="${i/10}" x="${xOf(i)}" y="${yR+78}" font-size="${o.maxCm>12?23:32}" font-weight="800" text-anchor="middle" fill="#3a3226" font-family="system-ui,sans-serif">${i/10}</text>`;
+  }
+  s += `<text x="${X0+o.maxCm*S+22}" y="${yR+30}" font-size="22" font-weight="800" fill="#4a4136" font-family="system-ui,sans-serif">cm</text>`;
+  s += `</g></svg>`;
+  return s;
+}
+
+/* Messbecher / Messkrug: Skala und Wasserstand aus DERSELBEN Funktion yOf(ml) */
+let vesselCounter = 0;
+function vesselSvg(o){ // o:{cap, level, tick, labelEvery, label(ml)->text, style:'beaker'|'jug'}
+  const id = 'vc'+(++vesselCounter);
+  const xL=100, xR=180, yT=36, yB=300, Hh=yB-yT;
+  const yOf = ml => yB - ml/o.cap*Hh;
+  const glass = `M${xL},${yT} V${yB-9} Q${xL},${yB} ${xL+9},${yB} H${xR-9} Q${xR},${yB} ${xR},${yB-9} V${yT}`;
+  let s = `<svg viewBox="0 0 250 330" class="vessel-svg" role="img" aria-label="${o.style==='jug'?'Messkrug':'Messbecher'} mit Skala" data-cap="${o.cap}" data-level="${o.level}" data-yb="${yB}" data-ht="${Hh}">`;
+  s += `<defs><clipPath id="${id}"><path d="${glass} Z"/></clipPath></defs>`;
+  const wy = yOf(o.level);
+  s += `<rect class="water" data-level="${o.level}" x="${xL}" y="${wy}" width="${xR-xL}" height="${yB-wy}" fill="#8fb9c9" opacity=".85" clip-path="url(#${id})"/>`;
+  s += `<line class="surface" x1="${xL}" y1="${wy}" x2="${xR}" y2="${wy}" stroke="#5f93a6" stroke-width="3"/>`;
+  s += `<path d="${glass}" fill="none" stroke="#7a7062" stroke-width="4" stroke-linecap="round"/>`;
+  s += `<path d="M${xL-7},${yT} H${xR+7}" stroke="#7a7062" stroke-width="5" stroke-linecap="round"/>`;
+  if(o.style==='jug') s += `<path d="M${xR},${yT+34} C${xR+44},${yT+34} ${xR+44},${yT+130} ${xR},${yT+130}" fill="none" stroke="#7a7062" stroke-width="7" stroke-linecap="round"/>`;
+  for(let ml=0; ml<=o.cap+1e-9; ml+=o.tick){
+    const y = yOf(ml), lab = Math.round(ml/o.tick) % o.labelEvery === 0;
+    s += `<line class="vt" data-ml="${ml}" x1="${xL}" y1="${y}" x2="${xL-(lab?24:13)}" y2="${y}" stroke="#3a3226" stroke-width="${lab?3:1.8}"/>`;
+    if(lab) s += `<text class="vl" data-ml="${ml}" x="${xL-29}" y="${y+5}" font-size="15" font-weight="800" text-anchor="end" fill="#3a3226" font-family="system-ui,sans-serif">${o.label(ml)}</text>`;
+  }
+  if(o.unit) s += `<text x="${xL-29}" y="${yT-14}" font-size="16" font-weight="800" text-anchor="end" fill="#665c50" font-family="system-ui,sans-serif">${o.unit}</text>`;
+  s += `</svg>`;
+  return s;
+}
+/* ===== MESSMEISTER: Alltagsgroessen (Plausibilitaetsdaten) ===== */
+// plausible = [min,max] in Basiseinheit (mm / g / ml). correct = typische Angaben; wrong = Angaben mit klar falscher Groessenordnung.
+const EST = [
+  {key:'bleistift', area:'len', icon:'bleistift', q:'Wie lang könnte ein Bleistift sein?', stem:'Ein Bleistift ist ungefähr', suf:'lang', plausible:[120,200], correct:[[16,'cm'],[18,'cm'],[19,'cm']], wrong:[[1,'cm'],[2,'m'],[20,'m'],[2,'km'],[18,'mm']]},
+  {key:'radiergummi_l', area:'len', icon:'radiergummi', q:'Wie lang könnte ein Radiergummi sein?', stem:'Ein Radiergummi ist ungefähr', suf:'lang', plausible:[30,70], correct:[[4,'cm'],[5,'cm']], wrong:[[50,'cm'],[4,'m'],[40,'m'],[4,'mm']]},
+  {key:'schere', area:'len', icon:'schere', q:'Wie lang könnte eine Schere sein?', stem:'Eine Schere ist ungefähr', suf:'lang', plausible:[120,230], correct:[[15,'cm'],[18,'cm'],[20,'cm']], wrong:[[15,'mm'],[15,'m'],[150,'m'],[1,'cm']]},
+  {key:'lineal', area:'len', icon:'lineal', q:'Wie lang ist ein großes Schullineal ungefähr?', stem:'Ein großes Schullineal ist ungefähr', suf:'lang', plausible:[280,320], correct:[[30,'cm']], wrong:[[3,'cm'],[3,'m'],[30,'m'],[3,'mm'],[300,'m']]},
+  {key:'tuer', area:'len', icon:'tuer', q:'Wie hoch könnte eine Zimmertür sein?', stem:'Eine Zimmertür ist ungefähr', suf:'hoch', plausible:[1900,2100], correct:[[2,'m'],[200,'cm']], wrong:[[2,'cm'],[20,'m'],[2,'km'],[20,'cm'],[2,'mm']]},
+  {key:'schreibtisch', area:'len', icon:'schreibtisch', q:'Wie breit könnte ein Schreibtisch sein?', stem:'Ein Schreibtisch ist ungefähr', suf:'breit', plausible:[1000,1500], correct:[[120,'cm'],[130,'cm'],[140,'cm']], wrong:[[12,'cm'],[12,'m'],[12,'km'],[12,'mm'],[1200,'cm']]},
+  {key:'fahrrad_l', area:'len', icon:'fahrrad', q:'Wie lang könnte ein Fahrrad sein?', stem:'Ein Fahrrad ist ungefähr', suf:'lang', plausible:[1500,2000], correct:[[170,'cm'],[180,'cm']], wrong:[[17,'cm'],[17,'m'],[170,'m'],[180,'mm']]},
+  {key:'schluessel', area:'len', icon:'schluessel', q:'Wie lang könnte ein Schlüssel sein?', stem:'Ein Schlüssel ist ungefähr', suf:'lang', plausible:[50,80], correct:[[6,'cm']], wrong:[[6,'mm'],[6,'m'],[60,'cm'],[6,'km']]},
+  {key:'zahnbuerste', area:'len', icon:'zahnbuerste', q:'Wie lang könnte eine Zahnbürste sein?', stem:'Eine Zahnbürste ist ungefähr', suf:'lang', plausible:[160,200], correct:[[18,'cm']], wrong:[[2,'cm'],[2,'m'],[18,'m'],[18,'mm']]},
+  {key:'loeffel', area:'len', icon:'loeffel', q:'Wie lang könnte ein Esslöffel sein?', stem:'Ein Esslöffel ist ungefähr', suf:'lang', plausible:[150,210], correct:[[17,'cm'],[20,'cm']], wrong:[[2,'cm'],[2,'m'],[17,'m'],[17,'mm']]},
+  {key:'moehre', area:'len', icon:'moehre', q:'Wie lang könnte eine Möhre sein?', stem:'Eine Möhre ist ungefähr', suf:'lang', plausible:[120,220], correct:[[15,'cm'],[20,'cm']], wrong:[[15,'mm'],[15,'m'],[2,'m'],[150,'m']]},
+  {key:'handy', area:'len', icon:'handy', q:'Wie lang könnte ein Handy sein?', stem:'Ein Handy ist ungefähr', suf:'lang', plausible:[130,170], correct:[[15,'cm']], wrong:[[15,'mm'],[15,'m'],[150,'m'],[2,'cm']]},
+  {key:'bus', area:'len', icon:'bus', q:'Wie lang könnte ein Linienbus sein?', stem:'Ein Linienbus ist ungefähr', suf:'lang', plausible:[10000,13000], correct:[[12,'m']], wrong:[[12,'cm'],[12,'mm'],[12,'km'],[120,'cm']]},
+  {key:'handy_g', area:'wei', icon:'handy', q:'Wie schwer könnte ein Handy sein?', stem:'Ein Handy wiegt ungefähr', suf:'', plausible:[120,220], correct:[[170,'g'],[200,'g']], wrong:[[2,'g'],[2,'kg'],[17,'g'],[20,'kg']]},
+  {key:'moehre_g', area:'wei', icon:'moehre', q:'Wie schwer könnte eine Möhre sein?', stem:'Eine Möhre wiegt ungefähr', suf:'', plausible:[50,120], correct:[[80,'g'],[100,'g']], wrong:[[8,'g'],[8,'kg'],[800,'g'],[1,'kg']]},
+  {key:'kartoffel', area:'wei', icon:'kartoffel', q:'Wie schwer könnte eine Kartoffel sein?', stem:'Eine Kartoffel wiegt ungefähr', suf:'', plausible:[80,250], correct:[[150,'g'],[200,'g']], wrong:[[2,'g'],[2,'kg'],[20,'kg']]},
+  {key:'tasse', area:'vol', icon:'tasse', q:'Wie viel passt ungefähr in eine Tasse?', stem:'In eine Tasse passen ungefähr', suf:'', plausible:[200,300], correct:[[250,'ml']], wrong:[[2,'ml'],[25,'l'],[250,'l'],[2,'l']]},
+  {key:'giesskanne', area:'vol', icon:'giesskanne', q:'Wie viel passt ungefähr in eine Gießkanne?', stem:'In eine Gießkanne passen ungefähr', suf:'', plausible:[8000,12000], correct:[[10,'l']], wrong:[[10,'ml'],[100,'l'],[1000,'l'],[1,'l']]},
+  {key:'kochtopf', area:'vol', icon:'kochtopf', q:'Wie viel passt ungefähr in einen großen Kochtopf?', stem:'In einen großen Kochtopf passen ungefähr', suf:'', plausible:[3000,6000], correct:[[4,'l']], wrong:[[4,'ml'],[40,'l'],[400,'l'],[40,'ml']]},
+  {key:'regentonne', area:'vol', icon:'regentonne', q:'Wie viel passt ungefähr in eine Regentonne?', stem:'In eine Regentonne passen ungefähr', suf:'', plausible:[150000,300000], correct:[[200,'l']], wrong:[[200,'ml'],[20,'l'],[2000,'l'],[2,'l']]},
+  {key:'aquarium', area:'vol', icon:'aquarium', q:'Wie viel passt ungefähr in ein Aquarium?', stem:'In ein Aquarium passen ungefähr', suf:'', plausible:[20000,200000], correct:[[100,'l']], wrong:[[100,'ml'],[1,'l'],[5000,'l'],[10,'ml']]},
+  {key:'autotank', area:'vol', icon:'auto', q:'Wie viel passt ungefähr in einen Autotank?', stem:'In einen Autotank passen ungefähr', suf:'', plausible:[40000,70000], correct:[[50,'l']], wrong:[[50,'ml'],[5,'l'],[500,'l'],[5,'ml']]},
+  {key:'ameise', area:'len', icon:'ameise', q:'Wie lang könnte eine Ameise sein?', stem:'Eine Ameise ist ungefähr', suf:'lang', plausible:[3,10], correct:[[8,'mm']], wrong:[[5,'m'],[50,'cm'],[5,'km']]},
+  {key:'auto_l', area:'len', icon:'auto', q:'Wie lang könnte ein Auto sein?', stem:'Ein Auto ist ungefähr', suf:'lang', plausible:[3500,5000], correct:[[4,'m']], wrong:[[4,'cm'],[4,'mm'],[40,'m'],[4,'km']]},
+  {key:'fussballfeld', area:'len', icon:'fussballfeld', q:'Wie lang könnte ein Fußballfeld sein?', stem:'Ein Fußballfeld ist ungefähr', suf:'lang', plausible:[90000,120000], correct:[[100,'m']], wrong:[[100,'cm'],[100,'mm'],[10,'m'],[100,'km']]},
+  {key:'banane', area:'len', icon:'banane', q:'Wie lang könnte eine Banane sein?', stem:'Eine Banane ist ungefähr', suf:'lang', plausible:[150,250], correct:[[18,'cm'],[20,'cm']], wrong:[[2,'cm'],[2,'m'],[20,'m'],[18,'mm']]},
+  {key:'klassenzimmer', area:'len', icon:'klassenzimmer', q:'Wie lang könnte ein Klassenzimmer sein?', stem:'Ein Klassenzimmer ist ungefähr', suf:'lang', plausible:[7000,10000], correct:[[8,'m'],[9,'m']], wrong:[[8,'cm'],[8,'mm'],[8,'km'],[80,'cm']]},
+  {key:'ei', area:'wei', icon:'ei', q:'Wie schwer könnte ein Ei sein?', stem:'Ein Ei wiegt ungefähr', suf:'', plausible:[50,70], correct:[[60,'g']], wrong:[[6,'g'],[6,'kg'],[600,'g'],[60,'kg']]},
+  {key:'brot', area:'wei', icon:'brot', q:'Wie schwer könnte ein Brot sein?', stem:'Ein Brot wiegt ungefähr', suf:'', plausible:[400,1000], correct:[[500,'g'],[750,'g']], wrong:[[5,'g'],[10,'kg'],[50,'kg'],[50,'g']]},
+  {key:'wassermelone', area:'wei', icon:'wassermelone', q:'Wie schwer könnte eine Wassermelone sein?', stem:'Eine Wassermelone wiegt ungefähr', suf:'', plausible:[3000,6000], correct:[[4,'kg'],[5,'kg']], wrong:[[40,'g'],[40,'kg'],[400,'kg'],[4,'g']]},
+  {key:'banane_g', area:'wei', icon:'banane', q:'Wie schwer könnte eine Banane sein?', stem:'Eine Banane wiegt ungefähr', suf:'', plausible:[100,150], correct:[[120,'g']], wrong:[[12,'g'],[12,'kg'],[1200,'g'],[2,'kg']]},
+  {key:'milchkarton_g', area:'wei', icon:'milchkarton', q:'Wie schwer könnte ein voller Milchkarton sein?', stem:'Ein voller Milchkarton wiegt ungefähr', suf:'', plausible:[1000,1100], correct:[[1,'kg']], wrong:[[1,'g'],[10,'kg'],[100,'kg'],[10,'g']]},
+  {key:'schreibtisch_g', area:'wei', icon:'schreibtisch', q:'Wie schwer könnte ein Schreibtisch sein?', stem:'Ein Schreibtisch wiegt ungefähr', suf:'', plausible:[20000,50000], correct:[[30,'kg']], wrong:[[3,'g'],[3,'kg'],[500,'kg'],[30,'g']]},
+  {key:'schulranzen', area:'wei', icon:'schulranzen', q:'Wie schwer könnte ein Schulranzen sein?', stem:'Ein Schulranzen wiegt ungefähr', suf:'', plausible:[3000,6000], correct:[[4,'kg'],[5,'kg']], wrong:[[40,'g'],[40,'kg'],[400,'kg'],[4,'g'],[400,'g']]},
+  {key:'apfel', area:'wei', icon:'apfel', q:'Wie schwer könnte ein Apfel sein?', stem:'Ein Apfel wiegt ungefähr', suf:'', plausible:[100,250], correct:[[150,'g'],[180,'g'],[200,'g']], wrong:[[2,'g'],[2,'kg'],[20,'kg'],[15,'kg'],[10,'g']]},
+  {key:'radiergummi_g', area:'wei', icon:'radiergummi', q:'Wie schwer könnte ein Radiergummi sein?', stem:'Ein Radiergummi wiegt ungefähr', suf:'', plausible:[8,30], correct:[[15,'g'],[20,'g']], wrong:[[15,'kg'],[300,'g'],[1,'kg'],[2,'kg'],[1,'g']]},
+  {key:'mehl', area:'wei', icon:'mehl', q:'Wie schwer könnte eine Packung Mehl sein?', stem:'Eine Packung Mehl wiegt ungefähr', suf:'', plausible:[450,1100], correct:[[500,'g'],[1,'kg']], wrong:[[1,'g'],[100,'kg'],[1000,'kg'],[10,'g'],[10,'kg']]},
+  {key:'buch', area:'wei', icon:'buch', q:'Wie schwer könnte ein Schulbuch sein?', stem:'Ein Schulbuch wiegt ungefähr', suf:'', plausible:[200,900], correct:[[400,'g'],[500,'g']], wrong:[[5,'g'],[10,'kg'],[50,'kg']]},
+  {key:'fahrrad_g', area:'wei', icon:'fahrrad', q:'Wie schwer könnte ein Fahrrad sein?', stem:'Ein Fahrrad wiegt ungefähr', suf:'', plausible:[10000,20000], correct:[[15,'kg']], wrong:[[15,'g'],[150,'kg'],[1500,'kg'],[1,'kg']]},
+  {key:'schokolade', area:'wei', icon:'schokolade', q:'Wie schwer könnte eine Tafel Schokolade sein?', stem:'Eine Tafel Schokolade wiegt ungefähr', suf:'', plausible:[80,125], correct:[[100,'g']], wrong:[[1,'g'],[10,'kg'],[100,'kg'],[1,'kg']]},
+  {key:'trinkflasche', area:'vol', icon:'trinkflasche', q:'Wie viel passt ungefähr in eine Trinkflasche?', stem:'In eine Trinkflasche passen ungefähr', suf:'', plausible:[300,1000], correct:[[500,'ml'],[750,'ml']], wrong:[[5,'ml'],[50,'l'],[500,'l']]},
+  {key:'eimer', area:'vol', icon:'eimer', q:'Wie viel passt ungefähr in einen Eimer?', stem:'In einen Eimer passen ungefähr', suf:'', plausible:[5000,12000], correct:[[10,'l']], wrong:[[10,'ml'],[100,'l'],[1000,'l']]},
+  {key:'badewanne', area:'vol', icon:'badewanne', q:'Wie viel passt ungefähr in eine Badewanne?', stem:'In eine Badewanne passen ungefähr', suf:'', plausible:[120000,200000], correct:[[150,'l']], wrong:[[150,'ml'],[15,'l'],[1500,'l'],[15,'ml']]},
+  {key:'milchkarton', area:'vol', icon:'milchkarton', q:'Wie viel passt ungefähr in einen Milchkarton?', stem:'In einen Milchkarton passen ungefähr', suf:'', plausible:[900,1100], correct:[[1,'l']], wrong:[[1,'ml'],[100,'l'],[10,'l'],[1000,'l']]},
+  {key:'teeloeffel', area:'vol', icon:'teeloeffel', q:'Wie viel passt ungefähr auf einen Teelöffel?', stem:'Auf einen Teelöffel passen ungefähr', suf:'', plausible:[3,6], correct:[[5,'ml']], wrong:[[5,'l'],[50,'l'],[500,'ml'],[50,'ml']]},
+  {key:'glas', area:'vol', icon:'glas', q:'Wie viel passt ungefähr in ein Wasserglas?', stem:'In ein Wasserglas passen ungefähr', suf:'', plausible:[150,300], correct:[[200,'ml']], wrong:[[2,'ml'],[20,'l'],[200,'l'],[2,'l']]},
+  {key:'wasserflasche', area:'vol', icon:'wasserflasche', q:'Wie viel passt ungefähr in eine große Wasserflasche?', stem:'In eine große Wasserflasche passen ungefähr', suf:'', plausible:[1000,2000], correct:[[1,'l'],[1.5,'l']], wrong:[[1,'ml'],[100,'l'],[1000,'l'],[10,'ml']]}
+];
+
+// Welche Einheit passt?  (unit = die uebliche Einheit)
+const UNIT_Q = [
+  {id:'bleistift', area:'len', icon:'bleistift', text:'Die Länge eines Bleistifts misst man meistens in ...', unit:'cm'},
+  {id:'radiergummi', area:'len', icon:'radiergummi', text:'Die Länge eines Radiergummis misst man meistens in ...', unit:'cm'},
+  {id:'schere', area:'len', icon:'schere', text:'Die Länge einer Schere misst man meistens in ...', unit:'cm'},
+  {id:'stadt', area:'len', icon:'wegweiser', text:'Die Entfernung zwischen zwei Städten misst man meistens in ...', unit:'km'},
+  {id:'papier', area:'len', icon:'papier', text:'Die Dicke eines Blatts Papier misst man meistens in ...', unit:'mm'},
+  {id:'klasse', area:'len', icon:'klassenzimmer', text:'Die Länge eines Klassenzimmers misst man meistens in ...', unit:'m'},
+  {id:'schluessel', area:'len', icon:'schluessel', text:'Die Länge eines Schlüssels misst man meistens in ...', unit:'cm'},
+  {id:'zahnbuerste', area:'len', icon:'zahnbuerste', text:'Die Länge einer Zahnbürste misst man meistens in ...', unit:'cm'},
+  {id:'loeffel_l', area:'len', icon:'loeffel', text:'Die Länge eines Esslöffels misst man meistens in ...', unit:'cm'},
+  {id:'moehre', area:'len', icon:'moehre', text:'Die Länge einer Möhre misst man meistens in ...', unit:'cm'},
+  {id:'handy', area:'len', icon:'handy', text:'Die Länge eines Handys misst man meistens in ...', unit:'cm'},
+  {id:'bus', area:'len', icon:'bus', text:'Die Länge eines Linienbusses misst man meistens in ...', unit:'m'},
+  {id:'handy_g', area:'wei', icon:'handy', text:'Das Gewicht eines Handys gibt man meistens in ... an.', unit:'g'},
+  {id:'moehre_g', area:'wei', icon:'moehre', text:'Das Gewicht einer Möhre gibt man meistens in ... an.', unit:'g'},
+  {id:'kartoffel', area:'wei', icon:'kartoffel', text:'Das Gewicht einer Kartoffel gibt man meistens in ... an.', unit:'g'},
+  {id:'tasse', area:'vol', icon:'tasse', text:'Den Inhalt einer Tasse gibt man meistens in ... an.', unit:'ml'},
+  {id:'giesskanne', area:'vol', icon:'giesskanne', text:'Den Inhalt einer Gießkanne gibt man meistens in ... an.', unit:'l'},
+  {id:'kochtopf', area:'vol', icon:'kochtopf', text:'Den Inhalt eines großen Kochtopfs gibt man meistens in ... an.', unit:'l'},
+  {id:'regentonne', area:'vol', icon:'regentonne', text:'Den Inhalt einer Regentonne gibt man meistens in ... an.', unit:'l'},
+  {id:'aquarium', area:'vol', icon:'aquarium', text:'Den Inhalt eines Aquariums gibt man meistens in ... an.', unit:'l'},
+  {id:'autotank', area:'vol', icon:'auto', text:'Den Inhalt eines Autotanks gibt man meistens in ... an.', unit:'l'},
+  {id:'ameise', area:'len', icon:'ameise', text:'Die Länge einer Ameise misst man meistens in ...', unit:'mm'},
+  {id:'auto_l', area:'len', icon:'auto', text:'Die Länge eines Autos misst man meistens in ...', unit:'m'},
+  {id:'fussballfeld', area:'len', icon:'fussballfeld', text:'Die Länge eines Fußballfeldes misst man meistens in ...', unit:'m'},
+  {id:'banane', area:'len', icon:'banane', text:'Die Länge einer Banane misst man meistens in ...', unit:'cm'},
+  {id:'ei', area:'wei', icon:'ei', text:'Das Gewicht eines Eis gibt man meistens in ... an.', unit:'g'},
+  {id:'melone', area:'wei', icon:'wassermelone', text:'Das Gewicht einer Wassermelone gibt man meistens in ... an.', unit:'kg'},
+  {id:'banane_g', area:'wei', icon:'banane', text:'Das Gewicht einer Banane gibt man meistens in ... an.', unit:'g'},
+  {id:'tisch_g', area:'wei', icon:'schreibtisch', text:'Das Gewicht eines Schreibtischs gibt man meistens in ... an.', unit:'kg'},
+  {id:'ranzen', area:'wei', icon:'schulranzen', text:'Das Gewicht eines Schulranzens gibt man meistens in ... an.', unit:'kg'},
+  {id:'radiergummi_g', area:'wei', icon:'radiergummi', text:'Das Gewicht eines Radiergummis gibt man meistens in ... an.', unit:'g'},
+  {id:'apfel', area:'wei', icon:'apfel', text:'Das Gewicht eines Apfels gibt man meistens in ... an.', unit:'g'},
+  {id:'mehl', area:'wei', icon:'mehl', text:'Das Gewicht einer Mehlpackung gibt man meistens in ... an.', unit:'kg'},
+  {id:'fahrrad', area:'wei', icon:'fahrrad', text:'Das Gewicht eines Fahrrads gibt man meistens in ... an.', unit:'kg'},
+  {id:'schokolade', area:'wei', icon:'schokolade', text:'Das Gewicht einer Tafel Schokolade gibt man meistens in ... an.', unit:'g'},
+  {id:'trinkflasche', area:'vol', icon:'trinkflasche', text:'Den Inhalt einer Trinkflasche gibt man meistens in ... an.', unit:'ml'},
+  {id:'eimer', area:'vol', icon:'eimer', text:'Den Inhalt eines Eimers gibt man meistens in ... an.', unit:'l'},
+  {id:'badewanne', area:'vol', icon:'badewanne', text:'Den Inhalt einer Badewanne gibt man meistens in ... an.', unit:'l'},
+  {id:'milch', area:'vol', icon:'milchkarton', text:'Den Inhalt eines Milchkartons gibt man meistens in ... an.', unit:'l'},
+  {id:'glas', area:'vol', icon:'glas', text:'Den Inhalt eines Wasserglases gibt man meistens in ... an.', unit:'ml'},
+  {id:'loeffel', area:'vol', icon:'teeloeffel', text:'Den Inhalt eines Teelöffels gibt man meistens in ... an.', unit:'ml'}
+];
+
+// Gegenstaende mit realistischen Gewichten (g) fuer "Schwerer oder leichter?"
+const WEIGHT_OBJ = [
+  {key:'radiergummi', name:'Radiergummi', w:[10,15,20]},
+  {key:'ei', name:'Ei', w:[50,60,70]},
+  {key:'schokolade', name:'Tafel Schokolade', w:[100]},
+  {key:'brot', name:'Brot', w:[500,750]},
+  {key:'apfel', name:'Apfel', w:[150,180,200]},
+  {key:'buch', name:'Schulbuch', w:[400,500,600]},
+  {key:'mehl', name:'Mehlpackung', w:[1000]},
+  {key:'banane', name:'Banane', w:[100,120,150]},
+  {key:'schreibtisch', name:'Schreibtisch', w:[20000,30000,40000]},
+  {key:'handy', name:'Handy', w:[150,170,200]},
+  {key:'moehre', name:'Möhre', w:[60,80,100]},
+  {key:'kartoffel', name:'Kartoffel', w:[100,150,200]},
+  {key:'schulranzen', name:'Schulranzen', w:[3000,4000,5000]},
+  {key:'wassermelone', name:'Wassermelone', w:[3000,4000,5000]},
+  {key:'fahrrad', name:'Fahrrad', w:[12000,15000,18000]}
+];
+/* ===== MESSMEISTER: Aufgabengeneratoren ===== */
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function shuffle(a){ const r=a.slice(); for(let i=r.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [r[i],r[j]]=[r[j],r[i]]; } return r; }
+const GEN = { used:new Set(), shown:new Set() };   // used: Aufgaben/Gegenstaende als Aufgabenziel, shown: Gegenstaende, die schon irgendwo gezeigt wurden
+function itemKey(icon){ return `it|${icon}`; }   // pro Gegenstand (nicht pro Bereich): Radiergummi als Laenge UND als Gewicht zaehlt als derselbe Gegenstand
+// Wiederholungsschutz: mehrfach neu wuerfeln, bis die Aufgabe in dieser Runde noch nicht vorkam
+function uniq(fn){ let t; for(let i=0;i<60;i++){ t=fn(); if(!GEN.used.has(t.key)){ GEN.used.add(t.key); return t; } } GEN.used.add(t.key); return t; }
+// Gegenstaende, die in dieser Runde noch nicht gezeigt wurden, zuerst (sonst bleibt die Reihenfolge zufaellig)
+function preferUnseen(list){ const s=shuffle(list); return s.filter(o=>!GEN.shown.has(itemKey(o.icon,o.area))).concat(s.filter(o=>GEN.shown.has(itemKey(o.icon,o.area)))); }
+// Aufgabenziel: bevorzugt Gegenstaende, die in dieser Runde noch nirgends gezeigt wurden
+function pickTarget(pool, iconOf, areaOf){ const un=pool.filter(r=>!GEN.shown.has(itemKey(iconOf(r),areaOf(r)))); return pick(un.length?un:pool); }
+const tIcon=r=>r.icon, tArea=r=>r.area;
+function distinctByIcon(list, n, excludeIcons){
+  const out=[], seen=new Set(excludeIcons||[]);
+  for(const o of list){ if(out.length>=n) break; if(seen.has(o.icon)) continue; seen.add(o.icon); out.push(o); }
+  return out;
+}
+function artCap(a){ return a.charAt(0).toUpperCase()+a.slice(1); }
+
+/* Antwortoptionen: richtige Zahl + typische Fehler (extras) + Nachbarwerte; immer 4 verschiedene */
+function numOptions(correct, extras, step, lo, hi){
+  const cands = extras.slice();
+  for(let k=1;k<=8;k++){ cands.push(correct+k*step, correct-k*step); }
+  const out=[correct];
+  for(const c of cands){
+    const v=clean(c);
+    if(out.length>=4) break;
+    if(v<lo || v>hi) continue;
+    if(out.some(o=>Math.abs(o-v)<1e-9)) continue;
+    out.push(v);
+  }
+  return out;
+}
+function mcFrom(correct, extras, step, lo, hi, fmt){
+  const nums=numOptions(correct, extras, step, lo, hi);
+  return { answer:fmt(correct), options:shuffle(nums.map(fmt)) };
+}
+const figIcon = key => `<div class="fig-icon">${iconSvg(key)}</div>`;
+const figSvg = svg => `<div class="fig-svg">${svg}</div>`;
+
+/* Messgegenstand: bevorzugt einen, der in dieser Runde noch nicht vorkam */
+function pickObj(){
+  const keys=Object.keys(OBJ_META), un=keys.filter(k=>!GEN.shown.has(itemKey(OBJ_ICON[k])));
+  const o=pick(un.length?un:keys); GEN.shown.add(itemKey(OBJ_ICON[o])); return o;
+}
+/* ---------- Modus 1: Miss nach! ---------- */
+function rulerMaxCm(e){ return e<=10 ? 10 : (e<=15 ? 15 : 20); }
+function genRuler(level){
+  return uniq(()=>{
+    const obj = pickObj(), meta = OBJ_META[obj], variant=randInt(0,3);
+    let s, L, e, maxCm, detail='cm', unit='cm', mc;
+    if(level==='leicht'){
+      s=0; L=randInt(2,10); e=L; maxCm=10;
+      mc=mcFrom(L, [], 1, 1, 10, v=>formatMeasure(v,'cm'));
+    } else if(level==='mittel'){
+      do{ s=randInt(1,12); L=randInt(2,10); e=s+L; }while(e>20);
+      maxCm=rulerMaxCm(e);
+      mc=mcFrom(L, [e], 1, 1, maxCm, v=>formatMeasure(v,'cm'));
+    } else if(Math.random()<0.55){            // schwer: halbe Zentimeter
+      do{ s=randInt(0,12)/2; L=randInt(4,18)/2; e=s+L; }while(e>15 || (Number.isInteger(s)&&Number.isInteger(L)));
+      maxCm=rulerMaxCm(e); detail='half';
+      mc=mcFrom(L, s>0?[e, L+0.5, L-0.5]:[L+0.5, L-0.5], 0.5, 0.5, maxCm, v=>formatMeasure(v,'cm'));
+    } else {                                   // schwer: Millimeter
+      unit='mm'; maxCm=10; detail='mm';
+      s = Math.random()<0.5 ? 0 : randInt(5,40);
+      do{ L=randInt(15,95); e=s+L; }while(e>100);
+      mc=mcFrom(L, [e, L+1, L-1, L+10, L-10], 1, 5, 100, v=>v+' mm');
+    }
+    const startMm = unit==='mm' ? s : s*10, endMm = unit==='mm' ? e : e*10;
+    const prompt = `Wie ${meta[2]} ist ${meta[0]} ${meta[1]}?`;
+    return { key:`r|${obj}|${startMm}|${endMm}`, kind:'ruler', type:'mc', prompt, spoken:prompt,
+      fig:figSvg(measureSvg({obj, startMm, endMm, maxCm, detail, variant})), options:mc.options, answer:mc.answer,
+      meta:{obj, startMm, endMm, maxCm, detail, lengthMm:endMm-startMm} };
+  });
+}
+
+/* ---------- Modus 2: Richtig messen ---------- */
+function genHow(){
+  return uniq(()=>{
+    const obj = pickObj(), variant=randInt(0,3), L=randInt(4,7), s=randInt(1,3), maxCm=10;
+    const mk=(a,b,tilt)=>measureSvg({obj, startMm:a, endMm:b, maxCm, detail:'cm', tilt, variant});
+    let cards=[
+      {html:mk(0,L*10,0), caption:`Ergebnis: ${L} cm`, ok:true},
+      {html:mk(s*10,(s+L)*10,0), caption:`Ergebnis: ${s+L} cm`, ok:false},
+      {html:mk(0,L*10,5), caption:`Ergebnis: ${L} cm`, ok:false}
+    ];
+    cards=shuffle(cards);
+    return { key:`how|${obj}|${L}|${s}`, kind:'how', type:'cards', cardClass:'how', prompt:'Wie wurde richtig gemessen?', spoken:'Wie wurde richtig gemessen?',
+      cards, answerIdx:cards.findIndex(c=>c.ok), meta:{obj,L,s} };
+  });
+}
+function genRulerText(){
+  return uniq(()=>{
+    const obj = pickObj(), meta=OBJ_META[obj], variant=randInt(0,3);
+    let s,L,e; do{ s=randInt(1,9); L=randInt(2,10); e=s+L; }while(e>20);
+    const maxCm=rulerMaxCm(e);
+    const er = meta[0]==='der' ? 'er' : (meta[0]==='die' ? 'sie' : 'es');
+    const prompt = `${artCap(meta[0])} ${meta[1]} beginnt bei ${s} cm und endet bei ${e} cm. Wie ${meta[2]} ist ${er}?`;
+    const mc=mcFrom(L, [e, s, s+e], 1, 1, 40, v=>formatMeasure(v,'cm'));
+    return { key:`rt|${obj}|${s}|${e}`, kind:'rulerText', type:'mc', prompt, spoken:prompt,
+      fig:figSvg(measureSvg({obj, startMm:s*10, endMm:e*10, maxCm, detail:'cm', variant})), options:mc.options, answer:mc.answer,
+      meta:{obj, startMm:s*10, endMm:e*10, maxCm, lengthMm:L*10} };
+  });
+}
+
+/* ---------- Modus 3 / 8: Schaetzen ---------- */
+function genEstimate(area, m8){
+  return uniq(()=>{
+    const a = area==='mix' ? pick(['len','wei','vol']) : area;
+    const rec = pickTarget(EST.filter(e=>e.area===a), tIcon, tArea);
+    const corr = pick(rec.correct), wr = shuffle(rec.wrong).slice(0,3);
+    const suf = (m8 && rec.suf) ? ' '+rec.suf : '';
+    const lab = ([v,u]) => formatMeasure(v,u)+suf;
+    const prompt = m8 ? rec.stem+' ...' : rec.q;
+    GEN.shown.add(itemKey(rec.icon,rec.area));
+    return { key:itemKey(rec.icon,rec.area), kind:m8?'plausible':'estimate', type:'mc', prompt, spoken:prompt,
+      fig:figIcon(rec.icon), options:shuffle([lab(corr), ...wr.map(lab)]), answer:lab(corr),
+      meta:{rec:rec.key, corr, wr} };
+  });
+}
+
+/* ---------- Modus 4: Welche Einheit passt? ---------- */
+function genUnit(area){
+  return uniq(()=>{
+    const a = area==='mix' ? pick(['len','wei','vol']) : area;
+    const rec = pickTarget(UNIT_Q.filter(q=>q.area===a), tIcon, tArea);
+    let opts;
+    if(a==='len') opts=['mm','cm','m','km'];
+    else {
+      const own = a==='wei' ? ['g','kg'] : ['ml','l'];
+      const others = shuffle(['mm','cm','m','km','g','kg','ml','l'].filter(u=>UNITS[u].kind!==UNITS[own[0]].kind)).slice(0,2);
+      opts=[...own, ...others];
+    }
+    GEN.shown.add(itemKey(rec.icon,rec.area));
+    return { key:itemKey(rec.icon,rec.area), kind:'unit', type:'mc', prompt:rec.text, spoken:`${rec.text.replace('...','…')} Welche Einheit passt?`,
+      fig:figIcon(rec.icon), options:shuffle(opts), answer:rec.unit, optClass:'unit', meta:{id:rec.id, unit:rec.unit} };
+  });
+}
+
+/* ---------- Umrechnungs-Optionen (Modus 5D und 7) ---------- */
+const COMPOUND = { len:[['km','m'],['m','cm'],['cm','mm']], wei:[['kg','g']], vol:[['l','ml']] };
+function distinctStrings(list){ const seen=new Set(), out=[]; for(const x of list){ if(!seen.has(x)){ seen.add(x); out.push(x); } } return out; }
+// Ziel: einfache Einheit; Optionen sind Zahlen (mit/ohne Einheit)
+function convSimpleOptions(T, toU, withUnit){
+  const kind=UNITS[toU].kind, V=convert(T, BASE[kind], toU);
+  const fmt = v => withUnit ? formatMeasure(v,toU) : DE(v);
+  const cands=[V*10, V/10, V*100, V/100, V*1000, V/1000].map(clean).filter(v=>Number.isInteger(v) && v>=1 && v!==V);
+  const nums=[V];
+  for(const c of cands){ if(nums.length>=4) break; if(!nums.includes(c)) nums.push(c); }
+  return { answer:fmt(V), options:shuffle(nums.map(fmt)) };
+}
+// Ziel: zusammengesetzte Schreibweise "1 m 50 cm"
+function convCompoundOptions(T, big, small){
+  const bf=UNITS[big].f, sf=UNITS[small].f, step=bf/10;
+  const bigVal=Math.floor(T/bf), rem=T-bigVal*bf;
+  const cand=[];
+  if(rem>0 && rem%(10*sf)===0) cand.push(bigVal*bf + rem/10);   // typischer Stellenfehler: 1 m 5 cm statt 1 m 50 cm
+  cand.push(T+step, T-step, T*10, T/10, T+2*step, T-2*step);
+  const fmt = t => formatCompound(t, big, small);
+  const out=[fmt(T)];
+  for(const c of cand){
+    if(out.length>=4) break;
+    if(c<=0 || c===T || !Number.isInteger(c) || c%sf!==0) continue;
+    const f=fmt(c); if(!out.includes(f)) out.push(f);
+  }
+  return { answer:out[0], options:shuffle(out) };
+}
+// Zusammengesetzt -> einfach: "1 m 50 cm = ? cm"
+function convFromCompoundOptions(T, big, small){
+  const bf=UNITS[big].f, sf=UNITS[small].f, bigInSmall=bf/sf, stepSmall=bf/10/sf;
+  const V=T/sf, bigVal=Math.floor(T/bf), rem=T-bigVal*bf;
+  const cand=[];
+  if(rem>0 && rem%(10*sf)===0) cand.push(bigVal*bigInSmall + rem/sf/10);
+  cand.push(V+stepSmall, V-stepSmall, V*10, V/10, V+2*stepSmall);
+  const nums=[V];
+  for(const c of cand){ const v=clean(c); if(nums.length>=4) break; if(v<1||!Number.isInteger(v)||nums.includes(v)) continue; nums.push(v); }
+  return { answer:DE(V), options:shuffle(nums.map(DE)) };
+}
+
+/* ---------- Modus 5: Schwerer oder leichter? ---------- */
+function genHeavierA(minRatio){
+  return uniq(()=>{
+    let a,b,wa,wb;
+    let tries=0;
+    do{ a=pick(WEIGHT_OBJ); b=pick(WEIGHT_OBJ); wa=pick(a.w); wb=pick(b.w); tries++; }
+    while(a===b || Math.max(wa,wb)/Math.min(wa,wb)<minRatio || (tries<40 && (GEN.shown.has(itemKey(a.key))||GEN.shown.has(itemKey(b.key)))));
+    GEN.shown.add(itemKey(a.key)); GEN.shown.add(itemKey(b.key));
+    const heavy = Math.random()<0.7;
+    const cards=[a,b].map((o,i)=>({icon:o.key, title:o.name, text:formatWeight(i===0?wa:wb)}));
+    const idxHeavier = wa>wb ? 0 : 1;
+    const q = heavy ? pick(['Was ist schwerer?','Welcher Gegenstand ist schwerer?']) : pick(['Was ist leichter?','Welcher Gegenstand ist leichter?']);
+    return { key:`ha|${a.key}${wa}|${b.key}${wb}`, kind:'heavierA', type:'cards', cardClass:'obj', prompt:q,
+      spoken:`${q} ${a.name}, ${cards[0].text}, oder ${b.name}, ${cards[1].text}?`,
+      cards, answerIdx: heavy ? idxHeavier : 1-idxHeavier, meta:{wa,wb,heavy} };
+  });
+}
+function weightText(T, compoundOk){ return compoundOk ? formatCompound(T,'kg','g') : T+' g'; }
+function genHeavierB(level){
+  return uniq(()=>{
+    let t1,t2,s1,s2;
+    if(level==='leicht'){
+      if(Math.random()<0.5){ do{ t1=randInt(2,18)*50; t2=randInt(2,18)*50; }while(Math.abs(t1-t2)<100); s1=t1+' g'; s2=t2+' g'; }
+      else { do{ t1=randInt(1,9); t2=randInt(1,9); }while(t1===t2); s1=t1+' kg'; s2=t2+' kg'; t1*=1000; t2*=1000; }
+    } else if(level==='mittel'){
+      const k=randInt(1,5); let g;
+      do{ g=k*1000+pick([-900,-500,-250,-100,100,250,500,900]); }while(g<=0);
+      const kgFirst=Math.random()<0.5;
+      t1=kgFirst?k*1000:g; t2=kgFirst?g:k*1000;
+      s1=kgFirst?k+' kg':g+' g'; s2=kgFirst?g+' g':k+' kg';
+    } else {
+      const a=randInt(1,4), b=pick([50,100,200,250,300,400,500,600,700,750,800,900]);
+      t1=a*1000+b; t2=t1+pick([-500,-250,-100,-50,50,100,250,500]);
+      s1=formatCompound(t1,'kg','g');                       // mindestens eine Angabe immer zusammengesetzt
+      s2=Math.random()<0.5 ? formatCompound(t2,'kg','g') : t2+' g';
+      if(Math.random()<0.5){ [t1,t2]=[t2,t1]; [s1,s2]=[s2,s1]; }
+    }
+    const heavy=Math.random()<0.7, q=heavy ? pick(['Was ist schwerer?','Welche Angabe ist schwerer?']) : pick(['Was ist leichter?','Welche Angabe ist leichter?']);
+    const idxHeavier=t1>t2?0:1;
+    return { key:`hb|${s1}|${s2}`, kind:'heavierB', type:'cards', cardClass:'txt', prompt:q,
+      spoken:`${q} ${s1} oder ${s2}?`, cards:[{title:'', text:s1},{title:'', text:s2}],
+      answerIdx: heavy?idxHeavier:1-idxHeavier, meta:{t1,t2,heavy} };
+  });
+}
+function genSign(level){
+  return uniq(()=>{
+    const out=pick(['<','=','>']);
+    let L,R;
+    if(level==='mittel'){
+      const k=randInt(1,3);
+      let g = out==='=' ? k*1000 : (out==='<' ? k*1000-pick([100,250,500]) : k*1000+pick([250,500,750]));
+      if(g<=0) g=500;
+      L={v:g,u:'g'}; R={v:k,u:'kg'};
+    } else {
+      const a=randInt(1,4), b=pick([100,200,250,500,750]), T1=a*1000+b;
+      const T2 = out==='=' ? T1 : (out==='<' ? T1+pick([50,100,250,500]) : T1-pick([50,100,250,500]));
+      L={t:T1}; R={t:T2};
+    }
+    let left, right, lb, rb;
+    if(level==='mittel'){ left=formatMeasure(L.v,L.u); right=formatMeasure(R.v,R.u); lb=toBase(L); rb=toBase(R); }
+    else { lb=L.t; rb=R.t; left=formatCompound(lb,'kg','g'); right=Math.random()<0.5?rb+' g':formatCompound(rb,'kg','g'); }
+    if(left===right) right = rb+' g';                       // gleiche Schreibweise auf beiden Seiten waere sinnlos ("4 kg 500 g = 4 kg 500 g")
+    if(Math.random()<0.5){ [left,right]=[right,left]; [lb,rb]=[rb,lb]; }
+    const cmp=compareMeasurements(lb,rb), sym = cmp<0?'<':(cmp>0?'>':'=');
+    return { key:`sg|${left}|${right}`, kind:'sign', type:'sign', prompt:'Setze das richtige Zeichen.', spoken:`Setze das richtige Zeichen. ${left} und ${right}.`,
+      left, right, options:['<','=','>'], answer:sym };
+  });
+}
+function genWeightEq(){
+  return uniq(()=>{
+    const t=randInt(0,3);
+    let from, opt, base;
+    if(t===0){ const k=randInt(1,9); base=k*1000; from=k+' kg'; opt=convSimpleOptions(base,'g',true); }
+    else if(t===1){ const k=randInt(1,9); base=k*1000; from=base+' g'; opt=convSimpleOptions(base,'kg',true); }
+    else if(t===2){ const a=randInt(1,4), b=pick([100,200,250,500,750]); base=a*1000+b; from=base+' g'; opt=convCompoundOptions(base,'kg','g'); }
+    else { const a=randInt(1,4), b=pick([100,200,250,500,750]); base=a*1000+b; from=formatCompound(base,'kg','g'); opt=convSimpleOptions(base,'g',true); }
+    const q=`Was ist genauso schwer wie ${from}?`;
+    return { key:`weq|${from}`, kind:'weightEq', type:'mc', prompt:q, spoken:q, options:opt.options, answer:opt.answer, meta:{base} };
+  });
+}
+function genHeavier(level){
+  const r=Math.random();
+  if(level==='leicht') return r<0.5 ? genHeavierA(3) : genHeavierB('leicht');
+  if(level==='mittel') return r<0.25 ? genHeavierA(1.8) : (r<0.6 ? genHeavierB('mittel') : genSign('mittel'));
+  return r<0.3 ? genHeavierB('schwer') : (r<0.65 ? genSign('schwer') : genWeightEq());
+}
+
+/* ---------- Modus 6: Wie viel ist drin? ---------- */
+const lblNum = ml => String(ml);
+const lblJug = ml => ml===0 ? '0' : (ml%1000===0 ? (ml/1000)+' l' : ml+' ml');
+const vesselFig = o => `<div class="vessel-wrap">${vesselSvg(o)}</div>`;
+function mlText(v){ return v>=1000 ? formatCompound(v,'l','ml') : v+' ml'; }
+function genDrinRead(level){
+  return uniq(()=>{
+    const style=pick(['beaker','jug']);
+    let o, level_ml, step, fmt=v=>v+' ml', extras=[];
+    if(level==='leicht'){
+      o={cap:1000, tick:100, labelEvery:1, label:lblNum, unit:'ml'}; level_ml=randInt(1,9)*100; step=100; extras=[];
+    } else if(level==='mittel'){
+      const cap=pick([500,1000]); o={cap, tick:50, labelEvery:2, label:lblNum, unit:'ml'};
+      level_ml = Math.random()<0.6 ? randInt(1,cap/50-1)*50 : randInt(1,cap/100-1)*100; step=50;
+      if(level_ml%100===0 && Math.random()<0.7) level_ml += (level_ml+50<cap?50:-50);
+    } else if(Math.random()<0.5){
+      o={cap:250, tick:10, labelEvery:5, label:lblNum, unit:'ml'}; level_ml=randInt(1,24)*10; step=10; extras=[level_ml+20, level_ml-20];
+    } else {
+      o={cap:2000, tick:100, labelEvery:5, label:lblJug}; level_ml=randInt(1,19)*100; step=100; fmt=mlText; extras=[level_ml+200, level_ml-200];
+      if(level_ml>=1000 && level_ml%1000!==0) extras.unshift(1000+(level_ml-1000)/10);   // Stellenfehler "1 l 30 ml"
+    }
+    o.level=level_ml; o.style=style;
+    const mc=mcFrom(level_ml, extras, step, step, o.cap, fmt);
+    const q = style==='jug' ? 'Wie viel Wasser ist im Messkrug?' : 'Wie viel Wasser ist im Messbecher?';
+    return { key:`dr|${o.cap}|${level_ml}|${style}`, kind:'drinRead', type:'mc', prompt:q, spoken:q, fig:vesselFig(o), options:mc.options, answer:mc.answer, meta:{cap:o.cap, level:level_ml} };
+  });
+}
+function genDrinMissing(level){
+  return uniq(()=>{
+    const jug = level==='schwer' && Math.random()<0.5;
+    const cap = jug ? 2000 : 1000, step = level==='leicht' ? 100 : 50;
+    const o = jug ? {cap, tick:100, labelEvery:5, label:lblJug} : (level==='leicht' ? {cap, tick:100, labelEvery:1, label:lblNum, unit:'ml'} : {cap, tick:50, labelEvery:2, label:lblNum, unit:'ml'});
+    let lv; do{ lv = randInt(1,cap/step-1)*step; if(jug) lv=Math.round(lv/100)*100; }while(lv<=0 || lv>=cap);
+    o.level=lv; o.style=jug?'jug':'beaker';
+    const st = jug ? 100 : step, miss=cap-lv, fmt = jug ? mlText : (v=>v+' ml');
+    const mc=mcFrom(miss, [lv, miss+st, miss-st], st, st, cap, fmt);
+    const q = jug ? 'Wie viel fehlt bis 2 l?' : 'Wie viel fehlt bis 1 l?';
+    return { key:`dm|${cap}|${lv}`, kind:'drinMissing', type:'mc', prompt:q, spoken:q, fig:vesselFig(o), options:mc.options, answer:mc.answer, meta:{cap, level:lv, missing:miss} };
+  });
+}
+function genDrinCompare(){
+  return uniq(()=>{
+    let a,b;
+    do{
+      const ca=pick([500,1000]), cb=pick([500,1000]);
+      a={cap:ca, level:randInt(2,ca/50-1)*50}; b={cap:cb, level:randInt(2,cb/50-1)*50};
+    }while(Math.abs(a.level-b.level)<100);
+    const mk=(v)=>vesselFig({cap:v.cap, level:v.level, tick:50, labelEvery:2, label:lblNum, unit:'ml', style:'beaker'});
+    const cards=[{html:mk(a), caption:'A'},{html:mk(b), caption:'B'}];
+    return { key:`dc|${a.cap}${a.level}|${b.cap}${b.level}`, kind:'drinCompare', type:'cards', cardClass:'vessels', prompt:'Welches Gefäß enthält mehr?', spoken:'Welches Gefäß enthält mehr?',
+      cards, answerIdx:a.level>b.level?0:1, meta:{a,b} };
+  });
+}
+function genVolCompare(level){
+  return uniq(()=>{
+    let T1,T2,s1,s2;
+    if(level==='leicht'){
+      const l=randInt(1,3), m=pick([250,500,800,900]); T1=l*1000; T2=m; s1=l+' l'; s2=m+' ml';
+    } else if(level==='mittel'){
+      T1=pick([500,750,900,1250,1500,1800]); T2=1000; s1=T1+' ml'; s2='1 l';
+    } else {
+      const a=randInt(1,3), b=pick([100,200,250,500,750]); T1=a*1000+b; T2=T1+pick([-300,-100,-50,50,100,300]);
+      s1=formatCompound(T1,'l','ml'); s2=Math.random()<0.5?formatCompound(T2,'l','ml'):T2+' ml';
+    }
+    if(Math.random()<0.5){ [T1,T2]=[T2,T1]; [s1,s2]=[s2,s1]; }
+    const more=Math.random()<0.7, q=more ? pick(['Was ist mehr?','Welche Menge ist größer?']) : pick(['Was ist weniger?','Welche Menge ist kleiner?']);
+    const idxMore=T1>T2?0:1;
+    return { key:`vc|${s1}|${s2}`, kind:'volCompare', type:'cards', cardClass:'txt', prompt:q, spoken:`${q} ${s1} oder ${s2}?`,
+      cards:[{title:'',text:s1},{title:'',text:s2}], answerIdx:more?idxMore:1-idxMore, meta:{T1,T2,more} };
+  });
+}
+function genDrin(level){
+  const r=Math.random();
+  if(level==='leicht') return r<0.6 ? genDrinRead('leicht') : (r<0.8 ? genVolCompare('leicht') : genDrinMissing('leicht'));
+  if(level==='mittel') return r<0.35 ? genDrinRead('mittel') : (r<0.6 ? genDrinMissing('mittel') : (r<0.8 ? genDrinCompare() : genVolCompare('mittel')));
+  return r<0.3 ? genDrinRead('schwer') : (r<0.5 ? genDrinMissing('schwer') : (r<0.7 ? genDrinCompare() : genVolCompare('schwer')));
+}
+
+/* ---------- Modus 7: Verwandle die Einheit! ---------- */
+function convLeicht(a){
+  const L={len:[[100,'cm','m'],[200,'cm','m'],[300,'cm','m'],[1,'m','cm'],[2,'m','cm'],[3,'m','cm'],[10,'mm','cm'],[20,'mm','cm'],[1,'cm','mm'],[2,'cm','mm'],[1000,'m','km'],[2000,'m','km'],[1,'km','m'],[2,'km','m']],
+    wei:[[1000,'g','kg'],[2000,'g','kg'],[3000,'g','kg'],[1,'kg','g'],[2,'kg','g'],[3,'kg','g']],
+    vol:[[1000,'ml','l'],[2000,'ml','l'],[3000,'ml','l'],[1,'l','ml'],[2,'l','ml'],[3,'l','ml']]};
+  return pick(L[a]);
+}
+function convMittel(a){
+  const pairs={len:[['m','cm'],['cm','m'],['mm','cm'],['cm','mm'],['km','m'],['m','km']], wei:[['kg','g'],['g','kg']], vol:[['l','ml'],['ml','l']]}[a];
+  const [fu,tu]=pick(pairs);
+  const big = UNITS[fu].f > UNITS[tu].f;
+  const ratio = big ? UNITS[fu].f/UNITS[tu].f : UNITS[tu].f/UNITS[fu].f;
+  const bigUnit = big ? fu : tu;
+  const n = (bigUnit==='km' || bigUnit==='cm') ? randInt(2,9) : randInt(2,20);   // Anzahl der grossen Einheiten
+  return [big ? n : n*ratio, fu, tu];
+}
+function genConvert(area, level){
+  return uniq(()=>{
+    const a = area==='mix' ? pick(['len','wei','vol']) : area;
+    if(level==='schwer' && Math.random()<0.8){
+      const [big,small]=pick(COMPOUND[a]);
+      let T;
+      if(a==='len'){
+        if(big==='m') T=(randInt(1,9)*100+pick([10,20,25,30,40,50,60,70,75,80,90]))*10;
+        else if(big==='cm') T=randInt(1,9)*10+randInt(1,9);
+        else T=randInt(1,5)*1000000+pick([100,200,250,300,500,600,700,750,800,900])*1000;
+      } else T=randInt(1,5)*1000+pick([100,200,250,300,400,500,600,700,750,800,900]);
+      const smallVal=T/UNITS[small].f;
+      if(Math.random()<0.5){
+        const o=convCompoundOptions(T,big,small), from=smallVal+' '+small;
+        return { key:`cv|${from}`, kind:'convert', type:'mc', eq:`${from} = ?`, prompt:'Verwandle die Einheit.', spoken:`Verwandle die Einheit. ${from}.`, options:o.options, answer:o.answer, meta:{T,big,small} };
+      }
+      const from=formatCompound(T,big,small), o=convFromCompoundOptions(T,big,small);
+      return { key:`cv|${from}`, kind:'convert', type:'mc', eq:`${from} = ? ${small}`, prompt:'Verwandle die Einheit.', spoken:`Verwandle die Einheit. ${from} gleich wie viele ${small}?`, options:o.options, answer:o.answer, meta:{T,big,small} };
+    }
+    const [v,fu,tu] = level==='leicht' ? convLeicht(a) : convMittel(a);
+    const T=toBase({v,u:fu}), o=convSimpleOptions(T,tu,false);
+    return { key:`cv|${v}${fu}${tu}`, kind:'convert', type:'mc', eq:`${v} ${fu} = ? ${tu}`, prompt:'Verwandle die Einheit.', spoken:`Verwandle die Einheit. ${v} ${fu} gleich wie viele ${tu}?`, options:o.options, answer:o.answer, optClass:'num', meta:{v,fu,tu,T} };
+  });
+}
+
+/* ---------- Modus 9: Challenge ---------- */
+function genChallengeKind(kind, level){
+  switch(kind){
+    case 'ruler': return genRuler(level);
+    case 'how': return Math.random()<0.6 ? genHow() : genRulerText();
+    case 'estimate': return genEstimateVar('mix');
+    case 'unit': return genUnitVar('mix');
+    case 'heavier': return genHeavier(level);
+    case 'drin': return genDrin(level);
+    case 'convert': return genConvertVar('mix', level);
+    case 'plausible': return genPlausibleVar('mix');
+  }
+}
+const CHALLENGE_KINDS = ['ruler','how','estimate','unit','heavier','drin','convert','plausible'];
+
+
+/* ===================== MEHR ABWECHSLUNG: weitere Aufgabenformate ===================== */
+const EST_NAME = {banane:'Banane', klassenzimmer:'Klassenzimmer', ei:'Ei', brot:'Brot', wassermelone:'Wassermelone', ameise:'Ameise', auto_l:'Auto', fussballfeld:'Fußballfeld', schluessel:'Schlüssel', zahnbuerste:'Zahnbürste', loeffel:'Esslöffel', moehre:'Möhre', handy:'Handy', bus:'Linienbus', handy_g:'Handy', moehre_g:'Möhre', kartoffel:'Kartoffel', tasse:'Tasse', giesskanne:'Gießkanne', kochtopf:'Kochtopf', regentonne:'Regentonne', aquarium:'Aquarium', autotank:'Auto', banane_g:'Banane', milchkarton_g:'Milchkarton', schreibtisch_g:'Schreibtisch', bleistift:'Bleistift', radiergummi_l:'Radiergummi', schere:'Schere', lineal:'Lineal', tuer:'Zimmertür', schreibtisch:'Schreibtisch',
+  fahrrad_l:'Fahrrad', schulranzen:'Schulranzen', apfel:'Apfel', radiergummi_g:'Radiergummi', mehl:'Mehlpackung', buch:'Schulbuch', fahrrad_g:'Fahrrad',
+  schokolade:'Tafel Schokolade', trinkflasche:'Trinkflasche', eimer:'Eimer', badewanne:'Badewanne', milchkarton:'Milchkarton', teeloeffel:'Teelöffel',
+  glas:'Wasserglas', wasserflasche:'Wasserflasche'};
+function estSentence(rec, val){ return `${rec.stem} ${formatMeasure(val[0],val[1])}${rec.suf?' '+rec.suf:''}.`; }
+function estArea(area){ return area==='mix' ? pick(['len','wei','vol']) : area; }
+
+/* Umgekehrt: "Was wiegt ungefaehr 1 kg?" -> Gegenstand waehlen (nur klar unterscheidbare Gegenstaende) */
+function genEstimateReverse(area){
+  return uniq(()=>{
+    const a=estArea(area), pool=EST.filter(e=>e.area===a);
+    for(let tries=0;tries<80;tries++){
+      const rec=pickTarget(pool,tIcon,tArea), val=pick(rec.correct), vb=toBase({v:val[0],u:val[1]});
+      const others=pool.filter(o=>o.key!==rec.key && o.icon!==rec.icon && (vb/o.plausible[1]>=5 || o.plausible[0]/vb>=5));
+      if(others.length<3) continue;
+      const pickedO=distinctByIcon(preferUnseen(others), area==='mix'?3:2, [rec.icon]); if(pickedO.length<(area==='mix'?3:2)) continue; pickedO.concat([rec]).forEach(r=>GEN.shown.add(itemKey(r.icon,r.area)));
+      const cards=shuffle([rec, ...pickedO]).map(r=>({icon:r.icon, title:EST_NAME[r.key], text:'', key:r.key}));
+      const label=formatMeasure(val[0],val[1]);
+      const prompt = a==='len' ? `Was misst ungefähr ${label}?` : (a==='wei' ? `Was wiegt ungefähr ${label}?` : `In welchen Gegenstand passen ungefähr ${label}?`);
+      return { key:itemKey(rec.icon,rec.area), kind:'estimateRev', type:'cards', cardClass:'obj', prompt, spoken:prompt, cards, answerIdx:cards.findIndex(c=>c.key===rec.key), meta:{rec:rec.key, val, area:a} };
+    }
+    return genEstimate(area,false);
+  });
+}
+/* Stimmt das? (50 % wahr, 50 % falsch) */
+function genEstimateTF(area){
+  return uniq(()=>{
+    const a=estArea(area), rec=pickTarget(EST.filter(e=>e.area===a),tIcon,tArea), truth=Math.random()<0.5;
+    const val = truth ? pick(rec.correct) : pick(rec.wrong), s=estSentence(rec,val);
+    GEN.shown.add(itemKey(rec.icon,rec.area));
+    return { key:itemKey(rec.icon,rec.area), kind:'plausibleTF', type:'mc', prompt:'Stimmt das?', spoken:'Stimmt das? '+s, fig:figIcon(rec.icon)+`<div class="statement">${nb(s)}</div>`, figClass:'col',
+      options:['Stimmt','Stimmt nicht'], answer:truth?'Stimmt':'Stimmt nicht', rowClass:'two', optClass:'unit', meta:{rec:rec.key, val, truth} };
+  });
+}
+/* Welcher Satz stimmt? (vier Saetze zu verschiedenen Gegenstaenden, genau einer hat eine passende Groessenordnung) */
+function genEstimateSentence(area){
+  return uniq(()=>{
+    const a=estArea(area), pool = area==='mix' ? EST : EST.filter(e=>e.area===a);
+    const rec=pickTarget(pool,tIcon,tArea), others=distinctByIcon(preferUnseen(pool.filter(o=>o.key!==rec.key && o.icon!==rec.icon)), area==='mix'?3:2, [rec.icon]);
+    [rec,...others].forEach(r=>GEN.shown.add(itemKey(r.icon,r.area)));
+    const sents=[{s:estSentence(rec,pick(rec.correct)), ok:true}, ...others.map(o=>({s:estSentence(o,pick(o.wrong)), ok:false}))];
+    const opts=shuffle(sents), answer=opts.find(x=>x.ok).s;
+    return { key:itemKey(rec.icon,rec.area), kind:'plausibleSentence', type:'mc', prompt:'Welcher Satz stimmt?', spoken:'Welcher Satz stimmt? '+opts.map(x=>x.s).join(' '),
+      options:opts.map(x=>x.s), answer, rowClass:'sent', optClass:'sent', meta:{rec:rec.key, others:others.map(o=>o.key)} };
+  });
+}
+/* Einheit ergaenzen: "Ein Bleistift ist ungefaehr 18 ... lang." */
+function genUnitFill(area){
+  return uniq(()=>{
+    const a=estArea(area), rec=pickTarget(EST.filter(e=>e.area===a),tIcon,tArea), val=pick(rec.correct);
+    let opts;
+    if(a==='len') opts=['mm','cm','m','km'];
+    else { const own=a==='wei'?['g','kg']:['ml','l']; opts=[...own, ...shuffle(['mm','cm','m','km','g','kg','ml','l'].filter(u=>UNITS[u].kind!==UNITS[own[0]].kind)).slice(0,2)]; }
+    const prompt=`${rec.stem} ${DE(val[0])} ...${rec.suf?' '+rec.suf:''}.`;
+    GEN.shown.add(itemKey(rec.icon,rec.area));
+    return { key:itemKey(rec.icon,rec.area), kind:'unitFill', type:'mc', prompt, spoken:`${prompt.replace('...','…')} Welche Einheit passt?`, fig:figIcon(rec.icon), options:shuffle(opts), answer:val[1], optClass:'unit', meta:{rec:rec.key, val} };
+  });
+}
+/* Verwandle: Was ist am laengsten / schwersten / meisten? (Angaben in verschiedenen Einheiten) */
+function genConvertExtreme(area){
+  return uniq(()=>{
+    const a=estArea(area);
+    const sets={len:[300,500,800,900,1000,1200,1500,2000,2500,3000], wei:[250,500,750,900,1000,1500,2000,2500,3000], vol:[250,500,750,900,1000,1500,2000,2500,3000]};
+    const units={len:['mm','cm','m'], wei:['g','kg'], vol:['ml','l']}[a];
+    for(let tries=0;tries<80;tries++){
+      const bases=shuffle(sets[a]).slice(0,4);
+      const labels=bases.map(b=>{ const ok=units.filter(u=>Number.isInteger(convert(b,BASE[a],u))&&convert(b,BASE[a],u)>=1); return formatMeasure(convert(b,BASE[a],pick(ok)),'').trim(); });
+      // Einheit wieder anhaengen (oben nur Zahl berechnet) -> sauber neu aufbauen
+      const lab=bases.map(b=>{ const ok=units.filter(u=>{ const v=convert(b,BASE[a],u); return Number.isInteger(v)&&v>=1; }); const u=pick(ok); return {t:formatMeasure(convert(b,BASE[a],u),u), u}; });
+      if(new Set(lab.map(x=>x.u)).size<2 || new Set(lab.map(x=>x.t)).size<4) continue;
+      const biggest=Math.random()<0.6, idx=bases.indexOf(biggest?Math.max(...bases):Math.min(...bases));
+      const word={len:['am längsten','am kürzesten'], wei:['am schwersten','am leichtesten'], vol:['am meisten','am wenigsten']}[a][biggest?0:1];
+      const prompt=`Was ist ${word}?`;
+      return { key:`cx|${lab.map(x=>x.t).sort().join('|')}`, kind:'convertExtreme', type:'mc', prompt, spoken:prompt+' '+lab.map(x=>x.t).join(', '), options:lab.map(x=>x.t), answer:lab[idx].t, optClass:'unit', meta:{bases, idx, biggest, area:a} };
+    }
+    return genConvert(area,'mittel');
+  });
+}
+/* Verwandle: Stimmt das?  z. B. "300 cm = 3 m" */
+function genConvertTF(area, level){
+  return uniq(()=>{
+    const a=estArea(area), truth=Math.random()<0.5;
+    let eq, T;
+    if(level==='schwer' && Math.random()<0.7){
+      const [big,small]=pick(COMPOUND[a]);
+      let t;
+      if(a==='len'){ if(big==='m') t=(randInt(1,9)*100+pick([10,20,25,30,40,50,60,70,75,80,90]))*10; else if(big==='cm') t=randInt(1,9)*10+randInt(1,9); else t=randInt(1,5)*1000000+pick([100,200,250,300,500,600,700,750,800,900])*1000; }
+      else t=randInt(1,5)*1000+pick([100,200,250,300,400,500,600,700,750,800,900]);
+      T=t; const o=convCompoundOptions(t,big,small), shown=truth?o.answer:pick(o.options.filter(x=>x!==o.answer));
+      eq=`${t/UNITS[small].f} ${small} = ${shown}`;
+    } else {
+      const [v,fu,tu]= level==='leicht' ? convLeicht(a) : convMittel(a);
+      T=toBase({v,u:fu}); const o=convSimpleOptions(T,tu,false), shown=truth?o.answer:pick(o.options.filter(x=>x!==o.answer));
+      eq=`${v} ${fu} = ${shown} ${tu}`;
+    }
+    return { key:`ctf|${eq}`, kind:'convertTF', type:'mc', prompt:'Stimmt das?', spoken:'Stimmt das? '+eq.replace('=','gleich'), eq, options:['Stimmt','Stimmt nicht'], answer:truth?'Stimmt':'Stimmt nicht', rowClass:'two', optClass:'unit', meta:{truth, T} };
+  });
+}
+/* Auswahl mit Abwechslung */
+function genEstimateVar(area){ return Math.random()<0.62 ? genEstimate(area,false) : genEstimateReverse(area); }
+function genPlausibleVar(area){ const r=Math.random(); return r<0.34 ? genEstimate(area,true) : (r<0.68 ? genEstimateSentence(area) : genEstimateTF(area)); }
+function genUnitVar(area){ return Math.random()<0.55 ? genUnit(area) : genUnitFill(area); }
+function genConvertVar(area, level){
+  const r=Math.random();
+  if(level==='leicht') return r<0.7 ? genConvert(area,level) : genConvertTF(area,level);
+  return r<0.5 ? genConvert(area,level) : (r<0.75 ? genConvertExtreme(area) : genConvertTF(area,level));
+}
+/* ===== MESSMEISTER: Oberflaeche, Spielablauf ===== */
+const ROUND_TARGET = 8;
+const state = { mode:null, area:null, level:null, soundOn:true, progress:0, locked:false, currentTask:null, lastKinds:[], kindHist:[] };
+let pendingTimers = [];
+function after(ms, fn){ const id=setTimeout(()=>{ pendingTimers=pendingTimers.filter(t=>t!==id); try{ fn(); }catch(e){ state.locked=false; } }, ms); pendingTimers.push(id); return id; }
+function clearTimers(){ pendingTimers.forEach(clearTimeout); pendingTimers=[]; }
+let lockedSince=null;
+setInterval(()=>{ if(state.locked){ if(lockedSince===null) lockedSince=Date.now(); else if(Date.now()-lockedSince>5000){ state.locked=false; lockedSince=null; } } else lockedSince=null; }, 500);
+
+const $ = id => document.getElementById(id);
+const els = { start:$('screen-start'), sub:$('screen-sub'), game:$('screen-game'), end:$('screen-end'), grid:$('mode-grid'),
+  subTitle:$('sub-title'), subStep:$('sub-step'), subChoices:$('sub-choices'), prompt:$('prompt-text'), speak:$('btn-speak-task'),
+  body:$('task-body'), fb:$('feedback-msg'), badges:$('progress-badges'), count:$('progress-count'), btnLevel:$('btn-game-level'), endArt:$('end-art') };
+
+/* ---------- Sprachausgabe ---------- */
+const UNIT_WORDS = {km:'Kilometer', kg:'Kilogramm', mm:'Millimeter', cm:'Zentimeter', ml:'Milliliter', m:'Meter', g:'Gramm', l:'Liter'};
+function sayUnits(text){
+  return text.replace(/(\d|\?)\s*(km|kg|mm|cm|ml|m|g|l)\b/g, (m,n,u)=>(n==='?'?'wie viele':n)+' '+UNIT_WORDS[u])
+    .replace(/\s*=\s*/g,' gleich ').replace(/\.\.\.|…/g,', ').replace(/\s{2,}/g,' ').replace(/ ,/g,',');
+}
+function speak(text){
+  try{ if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(sayUnits(text)); u.lang='de-DE'; u.rate=.95; window.speechSynthesis.speak(u); }catch(e){}
+}
+function setPrompt(text, spoken){ els.prompt.textContent=nb(text); els.speak.onclick=()=>speak(spoken||text); }
+
+/* ---------- Feedback ---------- */
+const GOOD = ['Richtig!','Super!','Genau!','Das stimmt!','Klasse gemacht!'];
+const BAD_RULER = ['Schau noch einmal genau auf Anfang und Ende.','Schau auf Anfang und Ende.','Probier es noch einmal.'];
+const BAD_UNIT = ['Achte auf die Einheit.','Fast! Schau noch einmal genau hin.','Probier es noch einmal.'];
+const BAD_GENERIC = ['Fast! Schau noch einmal genau hin.','Probier es noch einmal.'];
+function badMsg(){
+  const k = state.currentTask && state.currentTask.kind;
+  if(['ruler','rulerText','how'].includes(k)) return pick(BAD_RULER);
+  if(['estimate','estimateRev','plausible','plausibleTF','plausibleSentence','unit','unitFill','convert','convertTF','convertExtreme','weightEq'].includes(k)) return pick(BAD_UNIT);
+  return pick(BAD_GENERIC);
+}
+function showFb(msg, good){ els.fb.textContent=msg; els.fb.classList.toggle('good',!!good); els.fb.classList.add('show'); }
+function shakeEl(el){ el.classList.add('wrong-shake'); after(430, ()=>el.classList.remove('wrong-shake')); }
+function answerClick(isCorrect, el){
+  if(state.locked) return;
+  if(isCorrect){ state.locked=true; el.classList.add('correct-pulse'); showFb(pick(GOOD), true); after(700, onSuccess); }
+  else { shakeEl(el); showFb(badMsg()); }
+}
+
+/* ---------- Modi ---------- */
+const AREAS = [ {key:'len', label:'Längen', emoji:'📏'}, {key:'wei', label:'Gewichte', emoji:'⚖️'}, {key:'vol', label:'Fassungsvermögen', emoji:'💧'}, {key:'mix', label:'Gemischt', emoji:'🎲'} ];
+const LEVELS = [ {key:'leicht', label:'Leicht', emoji:'🌱'}, {key:'mittel', label:'Mittel', emoji:'🌿'}, {key:'schwer', label:'Schwer', emoji:'⭐'} ];
+const MODES = [
+  {key:'miss', cls:'c1', title:'📏 Miss nach!', sub:'Lineal ablesen', icon:'miss', levels:true},
+  {key:'richtig', cls:'c2', title:'📐 Richtig messen', sub:'Lineal anlegen', icon:'richtig'},
+  {key:'schaetze', cls:'c3', title:'👀 Schätze mal!', sub:'Größen einschätzen', icon:'eye', areas:true},
+  {key:'einheit', cls:'c4', title:'🏷️ Welche Einheit passt?', sub:'Einheit wählen', icon:'tag', areas:true},
+  {key:'schwerer', cls:'c5', title:'⚖️ Schwerer oder leichter?', sub:'Gewichte vergleichen', icon:'scale', levels:true},
+  {key:'drin', cls:'c6', title:'💧 Wie viel ist drin?', sub:'Messbecher ablesen', icon:'beaker', levels:true},
+  {key:'verwandle', cls:'c7', title:'🔄 Verwandle die Einheit!', sub:'Umrechnen', icon:'convert', areas:true, levels:true},
+  {key:'stimmt', cls:'c8', title:'🎒 Was könnte stimmen?', sub:'Alltagsgrößen', icon:'bag', areas:true},
+  {key:'challenge', cls:'c9', title:'🏆 Messmeister-Challenge', sub:'Alles gemischt', icon:'trophy', levels:true}
+];
+function modeIcon(k){
+  const S = inner => `<svg viewBox="0 0 100 100" aria-hidden="true">${inner}</svg>`;
+  switch(k){
+    case 'miss': return S(ICONS.lineal.replace('translate','')+`<g transform="translate(0,-26) scale(.9)">${ICONS.bleistift}</g>`);
+    case 'richtig': return S(`<g transform="translate(0,6)">${ICONS.lineal}</g><circle cx="74" cy="28" r="16" fill="#6d8768"/><path d="M66,28 l6,7 l12,-14" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`);
+  case 'eye': return S(`<path d="M6,50 C24,22 76,22 94,50 C76,78 24,78 6,50 Z" fill="#fffdf8" stroke="#3a3226" stroke-width="4"/><circle cx="50" cy="50" r="15" fill="#8fb9c9" stroke="#3a3226" stroke-width="3"/><circle cx="50" cy="50" r="6" fill="#3a3226"/>`);
+    case 'tag': return S(`<path d="M12,22 H60 L90,50 L60,78 H12 Z" fill="#eec14a" stroke="#c99a1f" stroke-width="4" stroke-linejoin="round"/><circle cx="26" cy="50" r="5" fill="#fffdf8"/><text x="52" y="58" font-size="22" font-weight="800" text-anchor="middle" fill="#3a3226" font-family="system-ui,sans-serif">cm</text>`);
+    case 'scale': return S(`<rect x="46" y="20" width="8" height="64" fill="#7a7062"/><rect x="14" y="16" width="72" height="8" rx="4" fill="#7a7062"/><path d="M20,24 L8,58 H40 Z" fill="none" stroke="#7a7062" stroke-width="3"/><path d="M80,24 L68,58 H100 Z" fill="none" stroke="#7a7062" stroke-width="3" transform="translate(-8,0)"/><rect x="6" y="58" width="36" height="8" rx="3" fill="#d97e55"/><rect x="58" y="58" width="36" height="8" rx="3" fill="#8fa888"/><rect x="30" y="84" width="40" height="7" rx="3" fill="#7a7062"/>`);
+    case 'beaker': return S(`<path d="M28,12 H72 L68,86 a4,4 0 0 1 -4,4 H36 a4,4 0 0 1 -4,-4 Z" fill="#eef6f9" stroke="#7a7062" stroke-width="4"/><path d="M31,46 H69 L68,86 a4,4 0 0 1 -4,4 H36 a4,4 0 0 1 -4,-4 Z" fill="#8fb9c9"/><g stroke="#3a3226" stroke-width="3"><line x1="28" y1="28" x2="42" y2="28"/><line x1="29" y1="46" x2="42" y2="46"/><line x1="30" y1="64" x2="42" y2="64"/></g>`);
+    case 'convert': return S(`<path d="M18,38 H72 M60,24 L74,38 L60,52" fill="none" stroke="#d97e55" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M82,66 H28 M40,52 L26,66 L40,80" fill="none" stroke="#6d8768" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`);
+    case 'bag': return S(ICONS.schulranzen);
+    case 'trophy': return S(`<path d="M30,14 H70 V42 a20,20 0 0 1 -40,0 Z" fill="#eec14a" stroke="#c99a1f" stroke-width="4"/><path d="M30,20 H16 V28 a14,14 0 0 0 14,14 M70,20 H84 V28 a14,14 0 0 1 -14,14" fill="none" stroke="#c99a1f" stroke-width="4"/><rect x="44" y="60" width="12" height="16" fill="#c99a1f"/><rect x="32" y="76" width="36" height="9" rx="3" fill="#a97a4d"/>`);
+  }
+  return S('');
+}
+
+function buildStart(){
+  els.grid.innerHTML='';
+  MODES.forEach(m=>{
+    const b=document.createElement('button'); b.className='mode-card '+m.cls;
+    b.innerHTML=`<div class="mode-icon">${modeIcon(m.icon)}</div><div class="mode-title">${m.title}</div><div class="mode-sub">${m.sub}</div>`;
+    b.addEventListener('click',()=>onModeClick(m)); els.grid.appendChild(b);
+  });
+}
+let subSteps=[], subIndex=0, subModeDef=null;
+function onModeClick(m){
+  clearTimers(); state.mode=m.key; state.area=null; state.level=null;
+  subModeDef=m; subSteps=[]; if(m.areas) subSteps.push('area'); if(m.levels) subSteps.push('level');
+  if(subSteps.length===0){ startRound(); } else { subIndex=0; showSubStep(); els.start.hidden=true; els.sub.hidden=false; }
+}
+function showSubStep(){
+  const kind=subSteps[subIndex], list=kind==='area'?AREAS:LEVELS;
+  els.subTitle.textContent=subModeDef.title;
+  els.subStep.textContent = subSteps.length>1 ? `${subIndex+1} von ${subSteps.length}: ${kind==='area'?'Bereich wählen':'Schwierigkeit wählen'}` : (kind==='area'?'Bereich wählen':'Schwierigkeit wählen');
+  els.subChoices.innerHTML='';
+  list.forEach(o=>{
+    const b=document.createElement('button'); b.className='sub-card'; b.innerHTML=`<span class="sub-emoji">${o.emoji}</span><span>${o.label}</span>`;
+    b.addEventListener('click',()=>{ state[kind]=o.key; if(subIndex<subSteps.length-1){ subIndex++; showSubStep(); } else startRound(); });
+    els.subChoices.appendChild(b);
+  });
+}
+$('btn-sub-back').addEventListener('click',()=>{ if(subIndex>0){ subIndex--; showSubStep(); } else { els.sub.hidden=true; els.start.hidden=false; } });
+$('btn-game-back').addEventListener('click',()=>{ clearTimers(); stopSpeech(); els.game.hidden=true; els.start.hidden=false; });
+$('btn-game-level').addEventListener('click',()=>{ clearTimers(); stopSpeech(); els.game.hidden=true; subIndex=0; showSubStep(); els.sub.hidden=false; });
+$('btn-game-restart').addEventListener('click',()=>startRound());
+$('btn-again').addEventListener('click',()=>startRound());
+$('btn-other-mode').addEventListener('click',()=>{ els.end.hidden=true; els.start.hidden=false; });
+$('btn-sound').addEventListener('click',()=>{ state.soundOn=!state.soundOn; $('btn-sound').textContent=state.soundOn?'🔊':'🔇'; $('btn-sound').setAttribute('aria-pressed',String(state.soundOn)); });
+function stopSpeech(){ try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){} }
+
+/* ---------- Runde ---------- */
+function buildBadges(){ els.badges.innerHTML=''; for(let i=0;i<ROUND_TARGET;i++){ const d=document.createElement('div'); d.className='badge'; els.badges.appendChild(d); } }
+function startRound(){
+  clearTimers(); stopSpeech();
+  state.progress=0; state.locked=false; state.lastKinds=[]; state.kindHist=[]; GEN.used=new Set(); GEN.shown=new Set();   // alten Fortschritt/Aufgaben sauber zuruecksetzen
+  els.start.hidden=true; els.sub.hidden=true; els.end.hidden=true; els.game.hidden=false;
+  els.btnLevel.hidden = !(subModeDef && (subModeDef.areas||subModeDef.levels));
+  els.count.textContent='0'; buildBadges(); newTask();
+}
+function onSuccess(){
+  state.progress=Math.min(ROUND_TARGET,state.progress+1); els.count.textContent=state.progress;
+  const b=els.badges.children[state.progress-1]; if(b) b.classList.add('lit');
+  if(state.progress>=ROUND_TARGET) after(500,endRound); else after(400,()=>newTask());
+}
+function endRound(){
+  clearTimers(); els.game.hidden=true; els.end.hidden=false;
+  els.endArt.innerHTML=['lineal','trinkflasche','schulranzen','eimer'].map(k=>`<div class="ea">${iconSvg(k)}</div>`).join('');
+  sndWin(); confetti();
+}
+
+/* ---------- Aufgabenwahl ---------- */
+function kindGens(mode, a, l){
+  // je Modus: welche Aufgabenarten gibt es (fuer gezielte Auswahl, falls Zufall die Rundenregel nicht trifft)
+  switch(mode){
+    case 'richtig': return {how:()=>genHow(), rulerText:()=>genRulerText()};
+    case 'schaetze': return {estimate:()=>genEstimate(a,false), estimateRev:()=>genEstimateReverse(a)};
+    case 'einheit': return {unit:()=>genUnit(a), unitFill:()=>genUnitFill(a)};
+    case 'schwerer':
+      if(l==='leicht') return {heavierA:()=>genHeavierA(3), heavierB:()=>genHeavierB('leicht')};
+      if(l==='mittel') return {heavierA:()=>genHeavierA(1.8), heavierB:()=>genHeavierB('mittel'), sign:()=>genSign('mittel')};
+      return {heavierB:()=>genHeavierB('schwer'), sign:()=>genSign('schwer'), weightEq:()=>genWeightEq()};
+    case 'drin':
+      if(l==='leicht') return {drinRead:()=>genDrinRead('leicht'), volCompare:()=>genVolCompare('leicht'), drinMissing:()=>genDrinMissing('leicht')};
+      return {drinRead:()=>genDrinRead(l), drinMissing:()=>genDrinMissing(l), drinCompare:()=>genDrinCompare(), volCompare:()=>genVolCompare(l)};
+    case 'verwandle':
+      return l==='leicht' ? {convert:()=>genConvert(a,l), convertTF:()=>genConvertTF(a,l)}
+                          : {convert:()=>genConvert(a,l), convertExtreme:()=>genConvertExtreme(a), convertTF:()=>genConvertTF(a,l)};
+    case 'stimmt': return {plausible:()=>genEstimate(a,true), plausibleSentence:()=>genEstimateSentence(a), plausibleTF:()=>genEstimateTF(a)};
+  }
+  return {};
+}
+/* Rundenplan: Aufgabenarten werden gleichmaessig verteilt und so gemischt, dass dieselbe Art nicht zu oft hintereinander kommt */
+function makePlan(kinds, n, maxRun, counts){
+  const base=Math.floor(n/kinds.length), extra=n%kinds.length, bag=[];
+  if(counts){ kinds.forEach(k=>{ for(let j=0;j<(counts[k]||0);j++) bag.push(k); }); }       // feste Verteilung (z. B. weniger Aufgaben mit vier Gegenstaenden)
+  else shuffle(kinds).forEach((k,i)=>{ const c=base+(i<extra?1:0); for(let j=0;j<c;j++) bag.push(k); });
+  for(let tries=0;tries<400;tries++){
+    const s=shuffle(bag); let ok=true, run=1;
+    for(let i=1;i<s.length;i++){ run = s[i]===s[i-1] ? run+1 : 1; if(run>maxRun){ ok=false; break; } }
+    if(ok) return s;
+  }
+  return shuffle(bag);
+}
+function planned(maxRun, counts){
+  const a=state.area||'mix', l=state.level, kg=kindGens(state.mode,a,l), kinds=Object.keys(kg);
+  if(state.kindHist.length===0) state.plan=makePlan(kinds, ROUND_TARGET, maxRun, counts);
+  const k=(state.plan||[])[state.kindHist.length];
+  const t = kg[k] ? kg[k]() : pick(Object.values(kg))();
+  state.kindHist.push(t.kind); return t;
+}
+function makeTask(){
+  const a=state.area||'mix', l=state.level;
+  switch(state.mode){
+    case 'miss': return genRuler(l);
+    case 'richtig': return planned(2);
+    case 'schaetze': return planned(2, {estimate:6, estimateRev:2});
+    case 'einheit': return planned(2);
+    case 'schwerer': return planned(l==='leicht'?2:1);
+    case 'drin': return planned(1);
+    case 'verwandle': return planned(l==='leicht'?2:1);
+    case 'stimmt': return planned(1, {plausible:3, plausibleTF:3, plausibleSentence:2});
+    case 'challenge': {
+      const cands=CHALLENGE_KINDS.filter(k=>!state.lastKinds.slice(-2).includes(k));
+      const k=pick(cands); state.lastKinds.push(k); return genChallengeKind(k,l);
+    }
+  }
+}
+
+/* ---------- Darstellung ---------- */
+function newTask(forced){
+  state.locked=false; els.fb.classList.remove('show','good'); els.fb.textContent='';
+  const t = forced || makeTask(); state.currentTask=t;
+  els.body.innerHTML=''; setPrompt(t.prompt, t.spoken||t.prompt);
+  if(t.fig){ const f=document.createElement('div'); f.className='fig'+(t.figClass?' '+t.figClass:''); f.innerHTML=t.fig; els.body.appendChild(f); }
+  if(t.eq){ const e=document.createElement('div'); e.className='equation'; e.textContent=nb(t.eq); els.body.appendChild(e); }
+  if(t.type==='mc') renderMC(t); else if(t.type==='cards') renderCards(t); else if(t.type==='sign') renderSign(t);
+  const stage=$('task-stage'); if(stage) stage.scrollTop=0;
+}
+function renderMC(t){
+  const row=document.createElement('div'); row.className='choice-row'+(t.rowClass?' '+t.rowClass:'');
+  t.options.forEach(o=>{ const b=document.createElement('button'); b.className='choice-card'+(t.optClass?' '+t.optClass:''); b.textContent=nb(o); b.dataset.value=o;
+    b.addEventListener('click',()=>answerClick(o===t.answer,b)); row.appendChild(b); });
+  els.body.appendChild(row);
+}
+function renderCards(t){
+  const row=document.createElement('div'); row.className='cards-row '+(t.cardClass||'');
+  t.cards.forEach((c,i)=>{
+    const b=document.createElement('button'); b.className='tap-card';
+    if(t.cardClass==='obj') b.innerHTML=`<div class="tc-icon">${iconSvg(c.icon)}</div><div class="tc-title">${c.title}</div><div class="tc-text">${nb(c.text)}</div>`;
+    else if(t.cardClass==='txt') b.innerHTML=`<div class="tc-text">${nb(c.text)}</div>`;
+    else b.innerHTML=`${c.html}<div class="tc-cap">${c.caption}</div>`;
+    b.setAttribute('aria-label', c.caption || c.text || ('Karte '+(i+1)));
+    b.addEventListener('click',()=>answerClick(i===t.answerIdx,b)); row.appendChild(b);
+  });
+  els.body.appendChild(row);
+}
+function renderSign(t){
+  const row=document.createElement('div'); row.className='sign-row';
+  row.innerHTML=`<div class="sign-side">${nb(t.left)}</div><div class="sign-q">?</div><div class="sign-side">${nb(t.right)}</div>`;
+  els.body.appendChild(row);
+  const btns=document.createElement('div'); btns.className='sign-btns';
+  t.options.forEach(o=>{ const b=document.createElement('button'); b.className='sign-btn'; b.textContent=o; b.setAttribute('aria-label', o==='<'?'kleiner':(o==='>'?'größer':'gleich'));
+    b.addEventListener('click',()=>answerClick(o===t.answer,b)); btns.appendChild(b); });
+  els.body.appendChild(btns);
+}
+
+/* ---------- Ton & Konfetti ---------- */
+let actx=null; document.addEventListener('pointerdown',()=>{ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } },{once:true});
+function tone(f,d,delay){ if(!state.soundOn||!actx) return; try{ const t0=actx.currentTime+(delay||0), o=actx.createOscillator(), g=actx.createGain(); o.type='triangle'; o.frequency.setValueAtTime(f,t0); g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.13,t0+.02); g.gain.exponentialRampToValueAtTime(.001,t0+d); o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0+d+.03); }catch(e){} }
+function sndWin(){ [523,659,784,1046,1318].forEach((f,i)=>tone(f,.3,i*.11)); }
+function confetti(){
+  const c=document.createElement('canvas'); c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:30;'; document.body.appendChild(c);
+  const ctx=c.getContext('2d'); c.width=innerWidth; c.height=innerHeight; const cols=['#d98a92','#8fa888','#eec14a','#d97e55','#8fb9c9'];
+  const ps=Array.from({length:90},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,w:4+Math.random()*6,h:6+Math.random()*10,vy:2+Math.random()*3,vx:-1+Math.random()*2,r:Math.random()*360,vr:-6+Math.random()*12,c:cols[Math.floor(Math.random()*cols.length)]}));
+  let n=0; (function loop(){ n++; ctx.clearRect(0,0,c.width,c.height); ps.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r*Math.PI/180); ctx.fillStyle=p.c; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); }); if(n<200) requestAnimationFrame(loop); else c.remove(); })();
+}
+
+buildStart();
+window.__mmDebug = { state, forceTask:t=>newTask(t), makeTask, GEN, sayUnits, startRound, showSubStep,
+  core:{convert,convertLength,convertWeight,convertVolume,toBase,formatMeasure,formatLength,formatWeight,formatVolume,formatCompound,compareMeasurements,UNITS,BASE},
+  gens:{genEstimateVar,genPlausibleVar,genUnitVar,genConvertVar,genEstimateReverse,genEstimateTF,genEstimateSentence,genUnitFill,genConvertExtreme,genConvertTF,genRuler,genHow,genRulerText,genEstimate,genUnit,genHeavier,genHeavierA,genHeavierB,genSign,genWeightEq,genDrin,genDrinRead,genDrinMissing,genDrinCompare,genVolCompare,genConvert,genChallengeKind},
+  gfx:{measureSvg,vesselSvg}, data:{EST,UNIT_Q,WEIGHT_OBJ,CHALLENGE_KINDS,OBJ_ICON,OBJ_META}, setMode:(m,a,l)=>{ state.mode=m; state.area=a; state.level=l; } };
+})();
+</script>
+</body>
+</html>
